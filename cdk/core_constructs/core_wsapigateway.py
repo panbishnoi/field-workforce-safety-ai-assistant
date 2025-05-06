@@ -78,6 +78,16 @@ class CoreWebSocketApiGateway(Construct):
                 }
             ]
         )         
+
+        # Deploy to stage with logging
+        self.stage = apigateway.WebSocketStage(
+            self,
+            "WebSocketStage",
+            web_socket_api=self.websocket_api,
+            stage_name="dev",
+            auto_deploy=True,
+        )
+        
         # Add suppressions for disabled logging
         NagSuppressions.add_resource_suppressions(
             self.stage,
@@ -91,17 +101,7 @@ class CoreWebSocketApiGateway(Construct):
                     reason="API Gateway logging intentionally disabled to avoid CloudWatch Logs role ARN requirement"
                 )
             ]
-        )            
-
-        # Deploy to stage with logging
-        self.stage = apigateway.WebSocketStage(
-            self,
-            "WebSocketStage",
-            web_socket_api=self.websocket_api,
-            stage_name="dev",
-            auto_deploy=True,
-        )
-        
+        )                  
         # Get the underlying CfnStage
         cfn_stage = self.stage.node.default_child
 
