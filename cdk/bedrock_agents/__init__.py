@@ -829,7 +829,7 @@ class BedrockAgentsStack(NestedStack):
             function_schema=bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
                     bedrock.CfnAgent.FunctionProperty(
-                        name="weatherAlert",
+                        name="weatherforecast",
                         description="Get weather forecast and alerts at lat and long for the datetime entered",
                         parameters={
                             "lat": bedrock.CfnAgent.ParameterDetailProperty(

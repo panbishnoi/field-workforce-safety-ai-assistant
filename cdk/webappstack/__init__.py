@@ -186,7 +186,7 @@ class FrontendStack(NestedStack):
             )
         )
 
-        # Create CloudFront distribution with OAC
+        # Create CloudFront distribution with OAC and SPA support
         distribution = cloudfront.Distribution(self, "Distribution",
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(
@@ -197,6 +197,20 @@ class FrontendStack(NestedStack):
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED
             ),
             default_root_object="index.html",
+            error_responses=[
+                cloudfront.ErrorResponse(
+                    http_status=403,
+                    response_http_status=200,
+                    response_page_path="/index.html",
+                    ttl=Duration.minutes(10)
+                ),
+                cloudfront.ErrorResponse(
+                    http_status=404,
+                    response_http_status=200,
+                    response_page_path="/index.html",
+                    ttl=Duration.minutes(10)
+                )
+            ]
         )
         self.frontend_url = f"https://{distribution.distribution_domain_name}"
         # Output CloudFront URL

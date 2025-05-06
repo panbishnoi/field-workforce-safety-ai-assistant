@@ -92,7 +92,7 @@ class WorkOrderApiStack(Construct):
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=[work_order_log_group.logGroupArn],
+                resources=[work_order_log_group.log_group_arn],
             ),
         )
 

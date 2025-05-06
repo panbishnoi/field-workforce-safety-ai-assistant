@@ -110,7 +110,7 @@ class WebSocketApiStack(Construct):
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=[safety_check_log_group.logGroupArn],
+                resources=[safety_check_log_group.log_group_arn],
             ),
             iam.PolicyStatement(
                 sid="CognitoAccess",

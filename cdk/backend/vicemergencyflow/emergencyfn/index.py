@@ -55,11 +55,11 @@ def is_relevant(geometry, search_point):
     if geometry['type'] == 'Point':
         point_lon, point_lat = geometry['coordinates']
         distance = haversine_distance(search_point[1], search_point[0], point_lat, point_lon)
-        return distance <= 20  # 5 km
+        return distance <= 10  # 10 km
     elif geometry['type'] == 'Polygon':
-        # Simplified check: if any point of the polygon is within 5 km, consider it relevant
+        # Simplified check: if any point of the polygon is within 10 km, consider it relevant
         for coord in geometry['coordinates'][0]:
             distance = haversine_distance(search_point[1], search_point[0], coord[1], coord[0])
-            if distance <= 20:
+            if distance <= 10:
                 return True
     return False

@@ -23,6 +23,7 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
   const [currentChunk, setCurrentChunk] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [finalResponseReceived, setFinalResponseReceived] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleMessage = (message: WebSocketMessage) => {
@@ -61,6 +62,12 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
     // Cleanup
     return () => {
       safetyCheckWebSocket.removeMessageHandler(handleMessage);
+      
+      // Clear timeout when component unmounts
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, [onSafetyCheckComplete, onSafetyCheckError]);
 
@@ -97,6 +104,12 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
     // Reset processing state
     setIsProcessing(false);
     setIsConnecting(false);
+    
+    // Clear the timeout when we receive the final response
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     
     // Extract the final response - check both direct and nested formats
     let finalResponse = message.safetycheckresponse || 
@@ -152,6 +165,12 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       setAuthError(null);
       setFinalResponseReceived(false);
 
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+
       // Connect to WebSocket if not already connected
       if (!safetyCheckWebSocket.isSocketConnected()) {
         setIsConnecting(true);
@@ -167,7 +186,7 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       }
 
       const queryObject = {
-        query: "Perform work order safety checks for WorkOrder. The workorder id, workorder location and start time information is available in below JSON::",
+        query: "Perform work order safety checks for below WorkOrder. The workorder and location information is available in this JSON::",
         workorderdetails: {
           work_order_id: workOrder.work_order_id,
           workOrderLocationAssetDetails: workOrder,
@@ -178,12 +197,32 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       // The token will be automatically included by the WebSocket class
       await safetyCheckWebSocket.performSafetyCheck(queryObject);
       
+      // Set timeout AFTER the request is sent - this is important
+      // We don't want the timeout to start during connection setup
+      timeoutRef.current = setTimeout(() => {
+        console.log("Safety check timeout triggered");
+        if (isProcessing && !finalResponseReceived) {
+          console.log("Safety check timed out - still processing and no final response");
+          setIsProcessing(false);
+          setIsConnecting(false);
+          onSafetyCheckError('Error in performing safety check');
+        } else {
+          console.log("Safety check timeout fired but operation already completed");
+        }
+      }, 120000); // 2 min timeout
+      
     } catch (error: any) {
       console.error('Error sending safety check request:', error);
       
       // Always reset both states on any error
       setIsConnecting(false);
       setIsProcessing(false);
+      
+      // Clear timeout on error
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       
       // Check if it's an authentication error
       if (error.message && error.message.includes('authentication')) {

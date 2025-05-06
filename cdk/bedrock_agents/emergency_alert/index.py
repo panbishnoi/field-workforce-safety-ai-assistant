@@ -63,17 +63,17 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.asin(math.sqrt(a))
     
     return R * c
-
+# Simplified check: if any point of the polygon is within 20 km, consider it relevant
 def is_relevant(geometry, search_point):
     if geometry['type'] == 'Point':
         point_lon, point_lat = geometry['coordinates']
         distance = haversine_distance(float(search_point[1]), float(search_point[0]), float(point_lat), float(point_lon))
-        return distance <= 50  # 5 km
+        return distance <= 20  # 5 km
     elif geometry['type'] == 'Polygon':
-        # Simplified check: if any point of the polygon is within 5 km, consider it relevant
+        
         for coord in geometry['coordinates'][0]:
             distance = haversine_distance(float(search_point[1]), float(search_point[0]), float(coord[1]), float(coord[0]))
-            if distance <= 5:
+            if distance <= 20:
                 return True
     return False
 
@@ -112,10 +112,10 @@ def lambda_handler(event, context):
             else:
                 print(f"'{lat}','{long}'")
                 forecast = emvalert(lat, long)
-                logger.debug(f"weather forecast {forecast=}")
+                logger.debug(f"EV Alerts {forecast=}")
                 responseBody = {
                     "TEXT": {
-                        "body": f"Here is the weather forecasted at : {forecast} "
+                        "body": f"Here are the emergency alerts at : {forecast} "
                     }
                 }
 

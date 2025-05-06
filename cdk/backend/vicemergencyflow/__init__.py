@@ -73,7 +73,7 @@ class VicEmergencyStack(Construct):
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=[emergency_check_log_group.logGroupArn],
+                resources=[emergency_check_log_group.log_group_arn],
             ),
             iam.PolicyStatement(
                 sid="DynamoDBAccess",

@@ -163,21 +163,13 @@ def handle_message(api_gateway_management, connection_id, event):
                 if 'bytes' in chunk:
                     chunk_data = chunk['bytes'].decode('utf-8')
                     completion += chunk_data
-                    
-                    # Send chunk to client
-                    send_to_client(api_gateway_management, connection_id, {
-                        'type': 'chunk',
-                        'content': chunk_data
-                    })
             
             if 'trace' in event_item:
                 trace = event_item['trace']
                 timestamp = int(time.time() * 1000)
-                
-                # Send trace to client
+                # Send only orchestration trace, then send to client.
                 send_to_client(api_gateway_management, connection_id, {
                     'type': 'trace',
-                    'traceType': trace.get('traceType', 'Unknown'),
                     'content': trace
                 })
         
@@ -192,12 +184,13 @@ def handle_message(api_gateway_management, connection_id, event):
         
         return {'statusCode': 200, 'body': 'Message sent'}
                 
-    except json.JSONDecodeError as e:
-        logger.error(f"JSON decode error: {str(e)}")
-        return {'statusCode': 400, 'body': 'Invalid message format'}
     except Exception as e:
-        logger.error(f"Message handling error: {str(e)}")
-        logger.error(traceback.format_exc())
+        send_to_client(api_gateway_management, connection_id, {
+            'type': 'final',
+            'requestId': request_id,
+            'status': 'COMPLETED',
+            'safetycheckresponse': "Error in performing safety check"
+        })
         return {'statusCode': 500, 'body': f'Failed to process message: {str(e)}'}
 
 def send_to_client(api_gateway_management, connection_id, message):
@@ -215,7 +208,7 @@ def send_to_client(api_gateway_management, connection_id, message):
             }, default=str)  # Add default=str to handle any other non-serializable objects
         )
         
-        logger.info(f"Message sent to {connection_id}: {message['type']}")
+       # logger.info(f"Message sent to {connection_id}: {message['type']}")
     except api_gateway_management.exceptions.GoneException:
         # Connection is no longer valid
         logger.warning(f"Connection {connection_id} is invalid (GoneException).")
