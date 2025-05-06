@@ -186,7 +186,7 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       }
 
       const queryObject = {
-        query: "Perform work order safety checks for below WorkOrder. The workorder and location information is available in this JSON::",
+        query: "Perform safety checks for WorkOrder:",
         workorderdetails: {
           work_order_id: workOrder.work_order_id,
           workOrderLocationAssetDetails: workOrder,

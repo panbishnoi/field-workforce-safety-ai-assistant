@@ -820,17 +820,17 @@ class BedrockAgentsStack(NestedStack):
 
         # Create Weather Agent Action Group
         weather_agent_action_group = bedrock.CfnAgent.AgentActionGroupProperty(
-            action_group_name="WeatherAlert",
+            action_group_name="WeatherForecast",
             action_group_executor=bedrock.CfnAgent.ActionGroupExecutorProperty(
                 lambda_=weather_agent_function.function_arn
             ),
-            description="Get weather forecast and alerts for a specific location and time",
+            description="Get weather forecast and warnings for a specific location and time",
             action_group_state="ENABLED",
             function_schema=bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
                     bedrock.CfnAgent.FunctionProperty(
                         name="weatherforecast",
-                        description="Get weather forecast and alerts at lat and long for the datetime entered",
+                        description="Get weather forecast at lat and long for the datetime entered",
                         parameters={
                             "lat": bedrock.CfnAgent.ParameterDetailProperty(
                                 type="string",
@@ -915,7 +915,7 @@ class BedrockAgentsStack(NestedStack):
             agent_name="FieldSafetyWeatherAgent",
             agent_resource_role_arn=weather_agent_role.role_arn,
             foundation_model=collaborator_foundation_model,
-            description = "You are a weather forecast and alert agent. On getting access to the latitude, longitude and target_date_time, you will be able to provide weather warnings and alerts",
+            description = "You are a weather forecast agent. On getting access to the latitude, longitude and target_date_time, you will be able to provide weather warnings and alerts",
             instruction="Goal: Fetch the weather information at a latitude and longitude at a target datetime.,Instructions: Fetch the weather information and alerts at a latitude and longitude at a target datetime. You may get the Workorder details in JSON format including workorder location",
             action_groups=[weather_agent_action_group],
             idle_session_ttl_in_seconds=1800,
