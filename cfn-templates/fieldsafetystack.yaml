@@ -441,7 +441,7 @@ Resources:
               
               physical_id = event.get('PhysicalResourceId', 'BuildTrigger')
               
-              # For Delete requests, delete the FieldWorkforceSafetyStack and send a response
+              # For Delete requests, delete the FieldWorkforceSafetyParentStack and send a response
               if event.get('RequestType') == 'Delete':
                   try:
                       # Delete the CDK-deployed stack
