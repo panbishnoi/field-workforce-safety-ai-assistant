@@ -184,7 +184,7 @@ Resources:
         PrivilegedMode: true
         EnvironmentVariables:
           - Name: GITHUB_REPO
-            Value: "https://github.com/panbishnoi/industrialai-workorder-management-demo.git"
+            Value: "https://github.com/panbishnoi/field-workforce-safety-ai-assistant.git"
           - Name: BUILD_TIMEOUT
             Value: "120"
           - Name: AWS_ACCOUNT_ID
