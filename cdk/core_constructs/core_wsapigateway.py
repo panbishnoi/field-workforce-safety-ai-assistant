@@ -23,12 +23,7 @@ class CoreWebSocketApiGateway(Construct):
     ):
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create log group for WebSocket API with removal policy
-        self.log_group = logs.LogGroup(
-            self, 
-            "WebSocketLogGroup",
-            removal_policy=RemovalPolicy.DESTROY
-        )
+
 
         # Create WebSocket API
         self.websocket_api = apigateway.WebSocketApi(
@@ -96,11 +91,7 @@ class CoreWebSocketApiGateway(Construct):
         # Get the underlying CfnStage
         cfn_stage = self.stage.node.default_child
 
-        # Configure logging using the escape hatch
-        cfn_stage.access_log_settings = apigateway.CfnStage.AccessLogSettingsProperty(
-            destination_arn=self.log_group.log_group_arn,
-            format='$context.identity.sourceIp - - [$context.requestTime] "$context.httpMethod $context.routeKey $context.protocol" $context.status $context.responseLength $context.requestId'
-        )
+
 
         # Grant WebSocket management permissions
         websocket_handler.add_to_role_policy(
