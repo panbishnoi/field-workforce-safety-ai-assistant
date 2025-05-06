@@ -83,6 +83,11 @@ class WebSocketApiStack(Construct):
             # IAM policies don't have a removal policy
         )
 
+        # Create ARNs for the resources
+        user_pool_arn = f"arn:aws:cognito-idp:{region}:{Stack.of(self).account}:userpool/{user_pool}"
+        agent_arn = f"arn:aws:bedrock:{region}:{Stack.of(self).account}:agent/{agent_id}"
+        agent_alias_arn = f"arn:aws:bedrock:{region}:{Stack.of(self).account}:agent-alias/{agent_id}/{agent_alias_id}"
+        
         web_socket_fn_policy.add_statements(
             iam.PolicyStatement(
                 sid="DynamoDBAccess",
@@ -99,14 +104,13 @@ class WebSocketApiStack(Construct):
                 resources=[web_socket_table.table_arn],
             ),
             iam.PolicyStatement(
-                sid="CWAccess",
+                sid="CloudWatchLogsAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "logs:CreateLogGroup",
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=["*"],
+                resources=[safety_check_log_group.logGroupArn],
             ),
             iam.PolicyStatement(
                 sid="CognitoAccess",
@@ -116,13 +120,27 @@ class WebSocketApiStack(Construct):
                     "cognito-idp:DescribeUserPoolClient",
                     "cognito-idp:GetJWKS",
                 ],
-                resources=["*"],
+                resources=[user_pool_arn],
             ),
             iam.PolicyStatement(
-                sid="BedrockFullAccess",
+                sid="BedrockAgentAccess",
                 effect=iam.Effect.ALLOW,
-                actions=["bedrock:*"],
-                resources=["*"],
+                actions=[
+                    "bedrock:InvokeAgent",
+                    "bedrock:GetAgent",
+                ],
+                resources=[
+                    agent_arn,
+                    agent_alias_arn
+                ],
+            ),
+            iam.PolicyStatement(
+                sid="BedrockModelAccess",
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "bedrock:InvokeModel",
+                ],
+                resources=["arn:aws:bedrock:*::foundation-model/*"],
             ),
         )
 

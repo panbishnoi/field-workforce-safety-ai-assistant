@@ -105,6 +105,7 @@ class CoreWebSocketApiGateway(Construct):
         # Grant WebSocket management permissions
         websocket_handler.add_to_role_policy(
             iam.PolicyStatement(
+                sid="WebSocketManageConnections",
                 effect=iam.Effect.ALLOW,
                 actions=['execute-api:ManageConnections'],
                 resources=[

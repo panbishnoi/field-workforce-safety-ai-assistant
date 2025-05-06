@@ -261,9 +261,10 @@ class BedrockAgentsStack(NestedStack):
             apply_to_children=True
         )
 
-        # Add policies to Lambda execution role
+        # Add permissions for Lambda execution role
         lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
+                sid="S3BucketAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
                     "s3:ListBucket",
@@ -275,6 +276,7 @@ class BedrockAgentsStack(NestedStack):
         
         lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
+                sid="S3ObjectAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
                     "s3:GetObject",
@@ -299,6 +301,7 @@ class BedrockAgentsStack(NestedStack):
         
         lambda_execution_role.add_to_policy(
             iam.PolicyStatement(
+                sid="DynamoDBAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
                     "dynamodb:GetItem",
@@ -754,14 +757,14 @@ class BedrockAgentsStack(NestedStack):
         for role in [weather_agent_role, location_alert_agent_role, emergency_alert_agent_role, supervisor_agent_role]:
             role.add_to_policy(
                 iam.PolicyStatement(
+                    sid="CloudWatchLogsAccess",
                     effect=iam.Effect.ALLOW,
                     actions=[
-                        'logs:CreateLogGroup',
                         'logs:CreateLogStream',
                         'logs:PutLogEvents'
                     ],
                     resources=[
-                        f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/bedrock/*"
+                        f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/bedrock/*:*"
                     ]
                 )
             )

@@ -34,31 +34,35 @@ Resources:
   # STEP 1: Create all log groups first
   CodeBuildLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/codebuild/FieldSafetyCodeBuild-${AWS::StackName}"
       RetentionInDays: 7
-      DeletionPolicy: Delete
 
   CFNResponseFunctionLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/CFNResponseFunction-${AWS::StackName}"
       RetentionInDays: 7
-      DeletionPolicy: Delete
 
   BuildTriggerLambdaLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/lambda/BuildTriggerLambda-${AWS::StackName}"
       RetentionInDays: 7
-      DeletionPolicy: Delete
       
   StepFunctionsLogGroup:
     Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
     Properties:
       LogGroupName: !Sub "/aws/states/${AWS::StackName}-BuildStateMachine"
       RetentionInDays: 7
-      DeletionPolicy: Delete
 
   # STEP 2: Create all IAM roles
   CodeBuildServiceRole:
@@ -171,6 +175,7 @@ Resources:
   # STEP 3: Create CodeBuild project
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
+    DependsOn: CodeBuildLogGroup
     Properties:
       TimeoutInMinutes: 60 
       Name:
@@ -186,7 +191,7 @@ Resources:
           - Name: GITHUB_REPO
             Value: "https://github.com/panbishnoi/field-workforce-safety-ai-assistant.git"
           - Name: BUILD_TIMEOUT
-            Value: "120"
+            Value: "60"
           - Name: AWS_ACCOUNT_ID
             Value: !Sub '${AWS::AccountId}'
           - Name: AWS_REGION
@@ -251,6 +256,7 @@ Resources:
   # STEP 4: Create Lambda functions
   CFNResponseFunction:
     Type: AWS::Lambda::Function
+    DependsOn: CFNResponseFunctionLogGroup
     Properties:
       FunctionName: !Sub "CFNResponseFunction-${AWS::StackName}"
       Handler: index.handler
@@ -323,6 +329,7 @@ Resources:
   # STEP 5: Create Step Functions state machine
   BuildStateMachine:
     Type: AWS::StepFunctions::StateMachine
+    DependsOn: StepFunctionsLogGroup
     Properties:
       StateMachineName: !Sub "${AWS::StackName}-BuildStateMachine"
       DefinitionString: !Sub |
@@ -412,6 +419,7 @@ Resources:
   # STEP 6: Create BuildTriggerLambda
   BuildTriggerLambda:
     Type: AWS::Lambda::Function
+    DependsOn: BuildTriggerLambdaLogGroup
     Properties:
       FunctionName: !Sub "BuildTriggerLambda-${AWS::StackName}"
       Handler: index.handler

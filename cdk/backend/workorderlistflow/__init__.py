@@ -64,6 +64,10 @@ class WorkOrderApiStack(Construct):
 
         work_order_fn_policy = iam.Policy(self, "WorkOrdersFnPolicy")
 
+        # Create ARNs for the DynamoDB tables and their indexes
+        workorder_table_arn = f"arn:aws:dynamodb:{Stack.of(self).region}:{Stack.of(self).account}:table/{dynamo_db_workorder_table}"
+        location_table_arn = f"arn:aws:dynamodb:{Stack.of(self).region}:{Stack.of(self).account}:table/{dynamo_db_location_table}"
+        
         work_order_fn_policy.add_statements(
             iam.PolicyStatement(
                 sid="DynamoDBAccess",
@@ -74,16 +78,21 @@ class WorkOrderApiStack(Construct):
                     "dynamodb:Query",
                     "dynamodb:Scan"
                 ],
-                resources=["*"],
+                resources=[
+                    workorder_table_arn,
+                    location_table_arn,
+                    f"{workorder_table_arn}/index/*",
+                    f"{location_table_arn}/index/*"
+                ],
             ),
             iam.PolicyStatement(
+                sid="CloudWatchLogsAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "logs:CreateLogGroup",
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=["*"],
+                resources=[work_order_log_group.logGroupArn],
             ),
         )
 

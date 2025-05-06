@@ -62,29 +62,36 @@ class VicEmergencyStack(Construct):
 
         emergency_check_request_fn_plicy = iam.Policy(self, "EmergencyCheckReqiestFnPolicy")
 
+        # Create ARN for the DynamoDB table
+        workorder_table_arn = f"arn:aws:dynamodb:{Stack.of(self).region}:{Stack.of(self).account}:table/{dynamo_db_workorder_table}"
+        
         emergency_check_request_fn_plicy.add_statements(
             iam.PolicyStatement(
+                sid="CloudWatchLogsAccess",
                 effect=iam.Effect.ALLOW,
                 actions=[
-                    "logs:CreateLogGroup",
                     "logs:CreateLogStream",
                     "logs:PutLogEvents",
                 ],
-                resources=["*"],
+                resources=[emergency_check_log_group.logGroupArn],
             ),
             iam.PolicyStatement(
+                sid="DynamoDBAccess",
                 effect=iam.Effect.ALLOW,
-                    actions=[
-                        "dynamodb:GetItem",
-                        "dynamodb:PutItem",
-                        "dynamodb:UpdateItem",
-                        "dynamodb:DeleteItem",
-                        "dynamodb:BatchGetItem",
-                        "dynamodb:BatchWriteItem",
-                        "dynamodb:Scan",
-                        "dynamodb:Query"
-                    ],
-                resources=["*"]
+                actions=[
+                    "dynamodb:GetItem",
+                    "dynamodb:PutItem",
+                    "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:Scan",
+                    "dynamodb:Query"
+                ],
+                resources=[
+                    workorder_table_arn,
+                    f"{workorder_table_arn}/index/*"
+                ]
             ),      
         )
 
