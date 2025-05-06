@@ -24,8 +24,8 @@ You can deploy this solution using either AWS CDK directly or via CloudFormation
 - Configure AWS credentials in your environment
 - Download and install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 - Access to Amazon Bedrock foundation models (Claude 3 Sonnet recommended)
-- OpenWeather API key for weather data integration
 - Enable required models in the Amazon Bedrock console (https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess). You may need to request access if not already granted.
+- OpenWeather API key is required for weather forecast integration. Please visit OpenWeather registration page for obtaining API Key[OpenWeatherSignUp](https://home.openweathermap.org/users/sign_up)
 
 ### Deployment Options
 
@@ -72,21 +72,9 @@ aws ecr-public get-login-password --region us-east-1 | docker login --username A
 cdk bootstrap
 ```
 
-5. Deploy the stacks with required parameters:
+5. Deploy the FieldWorkforceSafetyParentStack stack with required parameters:
 ```bash    
-cdk deploy FieldWorkforceSafetyStack --require-approval never --context openweather_api_key="YOUR_API_KEY" --context collaborator_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0" --context supervisor_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0"
-```
-
-For convenience in future deployments, you may choose to persist the context values in `cdk.json`:
-```json
-{
-  "app": "python3 app.py",
-  "context": {
-    "openweather_api_key": "YOUR_API_KEY",
-    "collaborator_foundation_model": "anthropic.claude-3-sonnet-20240229-v1:0",
-    "supervisor_foundation_model": "anthropic.claude-3-sonnet-20240229-v1:0"
-  }
-}
+cdk deploy FieldWorkforceSafetyParentStack --require-approval never --context openweather_api_key="YOUR_API_KEY" --context collaborator_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0" --context supervisor_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0"
 ```
 
 ## Clean Up
@@ -94,9 +82,9 @@ To avoid further charges, follow the tear down procedure:
 
 1. If you deployed using CloudFormation, delete the CloudFormation stack from the AWS console.
 
-2. If you deployed using CDK directly, destroy the stacks:
+2. If you deployed using CDK directly, destroy the parent stack:
 ```bash
-cdk destroy --all
+cdk destroy FieldWorkforceSafetyParentStack --require-approval never
 ```
 
 For a comprehensive list of arguments and options, consult the [CDK CLI documentation](https://docs.aws.amazon.com/cdk/v2/guide/cli.html).

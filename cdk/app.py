@@ -114,6 +114,6 @@ class FieldWorkforceSafetyParentStack(Stack):
 
 # Create the app and deploy the parent stack
 app = cdk.App()
-parent_stack = FieldWorkforceSafetyParentStack(app, "FieldWorkforceSafetyStack")
+parent_stack = FieldWorkforceSafetyParentStack(app, "FieldWorkforceSafetyParentStack")
 cdk.Aspects.of(app).add(AwsSolutionsChecks())
 app.synth()

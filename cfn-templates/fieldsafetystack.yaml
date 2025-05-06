@@ -232,7 +232,7 @@ Resources:
               commands:
                 - echo "Cloning repository..."
                 - git clone $GITHUB_REPO
-                - cd industrialai-workorder-management-demo
+                - cd field-workforce-safety-ai-assistant
             build:
               commands:
                 - export NODE_OPTIONS="--max_old_space_size=4096" # Increase Node.js memory limit
@@ -241,7 +241,7 @@ Resources:
                 - pip install -r requirements.txt
                 - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
                 - cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
-                - cdk deploy FieldWorkforceSafetyStack --require-approval never --context openweather_api_key="$OPENWEATHER_API_KEY" --context collaborator_foundation_model="$COLLABORATOR_FOUNDATION_MODEL" --context supervisor_foundation_model="$SUPERVISOR_FOUNDATION_MODEL" --context deploy_frontend="$DEPLOY_FRONTEND"
+                - cdk deploy FieldWorkforceSafetyParentStack --require-approval never --context openweather_api_key="$OPENWEATHER_API_KEY" --context collaborator_foundation_model="$COLLABORATOR_FOUNDATION_MODEL" --context supervisor_foundation_model="$SUPERVISOR_FOUNDATION_MODEL" --context deploy_frontend="$DEPLOY_FRONTEND"
                 - echo "Build completed successfully"
             post_build:
               commands:
@@ -449,18 +449,18 @@ Resources:
                       
                       # Check if the stack exists before attempting to delete
                       try:
-                          cfn.describe_stacks(StackName="FieldWorkforceSafetyStack")
-                          print("Deleting FieldWorkforceSafetyStack...")
-                          cfn.delete_stack(StackName="FieldWorkforceSafetyStack")
-                          print("Delete request for FieldWorkforceSafetyStack sent successfully")
+                          cfn.describe_stacks(StackName="FieldWorkforceSafetyParentStack")
+                          print("Deleting FieldWorkforceSafetyParentStack...")
+                          cfn.delete_stack(StackName="FieldWorkforceSafetyParentStack")
+                          print("Delete request for FieldWorkforceSafetyParentStack sent successfully")
                       except cfn.exceptions.ClientError as e:
                           # If the stack doesn't exist, that's fine
                           if "does not exist" in str(e):
-                              print("FieldWorkforceSafetyStack does not exist, nothing to delete")
+                              print("FieldWorkforceSafetyParentStack does not exist, nothing to delete")
                           else:
                               print(f"Error checking stack: {str(e)}")
                   except Exception as e:
-                      print(f"Error deleting FieldWorkforceSafetyStack: {str(e)}")
+                      print(f"Error deleting FieldWorkforceSafetyParentStack: {str(e)}")
                       # Continue with the response even if there was an error
                   
                   # Send success response for the custom resource
