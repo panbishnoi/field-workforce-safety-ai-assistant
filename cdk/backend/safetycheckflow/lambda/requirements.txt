@@ -1,0 +1,6 @@
+boto3
+requests-aws4auth
+aws-lambda-powertools
+aws_xray_sdk
+python-jose
+requests

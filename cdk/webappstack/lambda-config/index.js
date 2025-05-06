@@ -12,6 +12,7 @@ exports.handler = async function(event, context) {
             // Get parameters from the event
             const apiEndpoint = event.ResourceProperties.ApiEndpoint;
             const workorderApiEndpoint = event.ResourceProperties.WorkorderApiEndpoint;
+            const websocketApiEndpoint = event.ResourceProperties.WebSocketApiEndpoint;
             const regionName = event.ResourceProperties.RegionName;
             const cognitoUserPoolId = event.ResourceProperties.CognitoUserPoolId;
             const cognitoUserPoolClientId = event.ResourceProperties.CognitoUserPoolClientId;
@@ -24,6 +25,7 @@ exports.handler = async function(event, context) {
 window.APP_CONFIG = {
   VITE_API_ENDPOINT: "${apiEndpoint}",
   VITE_WORKORDER_API_ENDPOINT: "${workorderApiEndpoint}",
+  VITE_WEBSOCKET_API_ENDPOINT: "${websocketApiEndpoint}",
   VITE_REGION_NAME: "${regionName}",
   VITE_COGNITO_USER_POOL_ID: "${cognitoUserPoolId}",
   VITE_COGNITO_USER_POOL_CLIENT_ID: "${cognitoUserPoolClientId}",

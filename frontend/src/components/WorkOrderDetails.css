@@ -1,296 +1,43 @@
-.work-order-details {
-  width: 90%;
-  margin: 0 auto;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-
-
-
-/* Styling for Emergency Warnings Button */
-.emergency-warnings-button {
-  color: #a75f28; /* White text */
-  border: none;
-  padding: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.25rem;
-  margin-left: auto;
-}
-
-
-.status-badge-details {
-  display: inline-block;
-  border-radius: .5rem; /* Rounded corners for badges */
-}
-
-
-.status-badge-details.approved {
-  color: #2e7d32; /* Dark green text */
-}
-
-.status-badge-details.in-progress {
-  color: #1565c0; /* Dark blue text */
-}
-
-
-/* Header Section */
-.header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem; /* Add padding for spacing */
-  background-color: #f9f9f9; /* Light background for better contrast */
-  border-bottom: 1px solid #e0e0e0; /* Subtle border below the header */
-}
-
-/* Work Order Title */
-.header-section h1 {
-  font-size: 1.8rem; /* Adjust font size for better responsiveness */
-  color: #2c3e50; /* Dark blue-gray for better readability */
-  margin: 0;
-  word-wrap: break-word; /* Ensure long text wraps properly */
-}
-
-/* Back Button Styling */
-.back-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem; /* Spacing between arrow and text */
-  padding: 0.5rem 1rem; /* Adjust padding for better click area */
-  background-color: #d4d4d4; /* Neutral gray background */
-  border: none;
-  border-radius: 6px; /* Rounded corners */
-  cursor: pointer;
-  font-size: 1rem; /* Font size for button text */
-  color: #2c3e50; /* Text color for contrast */
-  transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-}
-
-.back-button span {
-  font-size: 1.25rem; /* Slightly larger arrow size */
-}
-
-/* Hover and Active States for Back Button */
-.back-button:hover {
-  background-color: #c4c4c4; /* Darker gray on hover */
-}
-
-.back-button:active {
-  transform: scale(0.95); /* Slight shrink effect on click */
-}
-
-/* Details Card */
-.details-card {
-  background-color: #ffffff; /* White background */
-  border-radius: 8px;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 6px -1px,
-    rgba(0, 0, 0, 0.06) 0px 2px 4px -1px; /* Subtle shadow */
-  padding: 2rem;
-}
-
-/* Grid Layout */
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjust for responsiveness */
-  gap: 2rem; /* Space between grid items */
-}
-
-.detail-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-item label {
-  font-size: 1.4rem; /* Smaller font for labels */
-  color: #6c757d; /* Muted gray for labels */
-}
-
-.location-card label {
-  font-size: 1.4rem; /* Smaller font for labels */
-  color: #6c757d; /* Muted gray for labels */
-}
-
-.detail-value {
-  font-size: 1.25rem; /* Larger font for values */
-}
-
-.location-value {
-  font-size: 1.25rem; /* Larger font for values */
-  color: #007bff; /* Standard blue hyperlink color */
-  text-decoration: none; /* Underline to mimic hyperlink */
-  cursor: pointer; /* Pointer cursor to indicate it's clickable */
-}
-
-.location-value:hover {
-  color: #0056b3; /* Darker blue on hover */
-  text-decoration: none; /* Remove underline on hover for effect */
-}
-
-/* Location Card */
-.location-card {
-  background-color: #ffffff; /* White background */
-  border-radius: 4px;
-  box-shadow: rgba(0, 0, 0, .1) .2px .2px .2px .2px; /* Subtle shadow */
-}
-
-/* Map Container */
-.map-container {
-    padding-top :1 rem
-}
-
-/* Precheck Button */
-.precheck-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  margin-bottom: 20px; 
-  background-color: #d4d4d4; 
-  border: none;
-  border-radius: 8px; /* Rounded corners */
-  cursor: pointer;
-  font-size: 1rem; /* Standard text size */
-  color: #2c3e50; /* White text for contrast */
-  
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 4px 6px -1px,
-    rgba(0, 0, 0, 0.1) 0px 2px 4px -1px; /* Subtle shadow for elevation */
-  transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
-}
-
-
-/* safetycheckresponse styling*/
-
-
-/* General container styling 
 .safety-check-response {
-  font-family: Arial, sans-serif;
-  color: #333; /* Dark gray text 
-  margin-top: 1rem;
-  padding: 1rem;
-  line-height: 1.6; /* Improve readability
-  margin: 0; /* Reset margins
-  padding: 0; /* Reset padding 
-  background-color: #f9f9f9;
-  border-radius: 2px; 
-  white-space: pre-wrap; /* Preserve formatting (e.g., line breaks) in the response 
-  word-wrap: break-word; /* Ensure long words break correctly to avoid overflow
-}
-*/
-/* General container styling */
-/* General container styling */
-.safety-check-response {
-  font-family: Arial, sans-serif;
-  color: #333; /* Dark gray text */
-  line-height: 1.6; /* Improve readability */
-  background-color: #f9f9f9; /* Light gray background for better readability */
-  border-radius: 8px; /* Rounded corners for a softer look */
-  padding: 20px; /* Add padding inside the container */
-  margin-top: 20px; /* Add space between the button and this section */
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  margin-top: 15px;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Title styling (e.g., Work Order Title) */
 .safety-check-response h1 {
-  font-size: 2em;
-  font-weight: bold;
-  color: #000; /* Black text */
-  margin-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0073bb;
+  margin-bottom: 15px;
 }
 
-/* Subtitle styling (e.g., Location) */
 .safety-check-response h2 {
-  font-size: 1.5em;
-  font-weight: bold;
-  color: #444; /* Dark gray text */
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 12px;
 }
 
-/* Section headings (e.g., Hazards and Incidents) */
-.safety-check-response h3 {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: #555; /* Slightly lighter gray */
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Paragraph styling for general text */
-.safety-check-response p {
-  margin: 0.5rem 0; /* Add spacing between paragraphs */
-}
-
-/* Bold text for labels (e.g., Location, Status) */
-.safety-check-response strong {
-  font-weight: bold;
-}
-
-/* Unordered list styling (e.g., Hazards and Incidents) */
 .safety-check-response ul {
-  list-style-type: disc; /* Use bullets for list items */
-  margin-left: 1.5rem; /* Indent the list */
+  margin-left: 20px;
+  margin-bottom: 15px;
 }
 
-/* Nested unordered lists (e.g., Control measures) */
-.safety-check-response ul ul {
-  list-style-type: circle; /* Use circles for nested lists */
-}
-
-/* List item styling */
 .safety-check-response li {
-  margin-bottom: 0.25rem; /* Reduce spacing between list items */
+  margin-bottom: 5px;
 }
 
-/* Address section styling (e.g., Location address) */
-.safety-check-response .address {
-  font-size: 1em;
-  color: #666; /* Medium gray text */
+.safety-check-response p {
+  margin-bottom: 10px;
 }
 
-/* Highlighted text (e.g., Risk levels or Incident Severity) */
-.safety-check-response .highlight {
-  color: #d9534f; /* Red for emphasis (Bootstrap style danger color) */
+.safety-check-response.error {
+  color: #d13212;
+  font-weight: 500;
 }
 
-/* Responsive adjustments for smaller screens */
-@media screen and (max-width: 768px) {
-  .safety-check-response h1 {
-    font-size: 1.8em;
-    margin-bottom: 0.75rem;
-  }
-
-  .safety-check-response h2 {
-    font-size: 1.3em;
-    margin-bottom: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .safety-check-response ul {
-    margin-left: 1rem; /* Reduce indentation on smaller screens */
-    padding-left: unset;
-    list-style-position: inside; /* Align bullets with the text on smaller screens */
-    word-wrap: break-word;
-    overflow-wrap:"break-word;"
-  }
-
-  .header-section {
-    flex-direction: column; /* Stack items vertically on smaller screens */
-    align-items: flex-start; /* Align items to the left */
-    gap: 1rem; /* Add spacing between elements */
-    padding: 1rem;
-    text-align: left;
-  }
-
-  .header-section h1 {
-    font-size: 1.8rem; /* Reduce font size for smaller screens */
-    word-wrap: break-word;
-    overflow-wrap:"break-word;"
+.section-heading-complete {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e8e3e; /* Green color */
 }
-
-}
-

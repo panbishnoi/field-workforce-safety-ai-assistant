@@ -1,0 +1,256 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { safetyCheckWebSocket, WebSocketMessage } from '@/lib/api';
+import { customAlphabet } from 'nanoid';
+import { Button, SpaceBetween, Box, Spinner } from "@cloudscape-design/components";
+import './WebSocketSafetyCheck.css';
+
+interface WebSocketSafetyCheckProps {
+  workOrder: any;
+  onSafetyCheckComplete: (response: string) => void;
+  onSafetyCheckError: (error: string) => void;
+  showResults?: boolean; // Optional prop to control whether to show results in this component
+}
+
+const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
+  workOrder,
+  onSafetyCheckComplete,
+  onSafetyCheckError,
+  showResults = false // Default to not showing results in this component
+}) => {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [traceContent, setTraceContent] = useState<string>("");
+  const [currentChunk, setCurrentChunk] = useState<string>("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [finalResponseReceived, setFinalResponseReceived] = useState(false);
+
+  useEffect(() => {
+    const handleMessage = (message: WebSocketMessage) => {
+      console.log('Received WebSocket message:', message);
+
+      // Check if the message is in the nested format
+      const actualMessage = message.message ? message.message : message;
+      const messageType = actualMessage.type;
+
+      switch (messageType) {
+        case 'chunk':
+          if (actualMessage.content) {
+            setCurrentChunk(prev => prev + actualMessage.content);
+          }
+          break;
+        case 'trace':
+          // Process trace message
+          handleTraceMessage(message);
+          break;
+        case 'final':
+          // Process final message
+          handleFinalMessage(actualMessage);
+          break;
+        case 'error':
+          // Reset states on error
+          setIsProcessing(false);
+          setIsConnecting(false);
+          onSafetyCheckError(actualMessage.message || 'Unknown error');
+          break;
+      }
+    };
+
+    // Add message handler
+    safetyCheckWebSocket.addMessageHandler(handleMessage);
+
+    // Cleanup
+    return () => {
+      safetyCheckWebSocket.removeMessageHandler(handleMessage);
+    };
+  }, [onSafetyCheckComplete, onSafetyCheckError]);
+
+  const handleTraceMessage = (message: WebSocketMessage) => {
+    // Extract the actual message content (handle nested structure)
+    const actualMessage = message.message ? message.message : message;
+    const content = actualMessage.content;
+    
+    if (!content) return;
+    
+    // Extract the rationale text if available
+    let rationale = null;
+    if (content.trace?.orchestrationTrace?.rationale?.text) {
+      rationale = content.trace.orchestrationTrace.rationale.text;
+    }
+    
+    // Only add to trace content if we have a rationale
+    if (rationale) {
+      // Append the new rationale to the existing trace content
+      setTraceContent(prev => {
+        // Add a separator if there's already content
+        const separator = prev ? '\n\n' : '';
+        return prev + separator + rationale;
+      });
+    }
+  };
+
+  const handleFinalMessage = (message: WebSocketMessage) => {
+    console.log("Received final message:", message);
+    
+    // Mark that we've received the final response
+    setFinalResponseReceived(true);
+    
+    // Reset processing state
+    setIsProcessing(false);
+    setIsConnecting(false);
+    
+    // Extract the final response - check both direct and nested formats
+    let finalResponse = message.safetycheckresponse || 
+                       (message.message && message.message.safetycheckresponse) || '';
+    
+    if (finalResponse) {
+      // Clean up the final response
+      finalResponse = cleanupFinalResponse(finalResponse);
+      
+      // Set the current chunk to show the final response (if we're showing results in this component)
+      setCurrentChunk(finalResponse);
+      
+      // Call the completion callback with the cleaned response
+      onSafetyCheckComplete(finalResponse);
+    } else {
+      onSafetyCheckError('No response received from safety check');
+    }
+  };
+
+  // Function to clean up the final response
+  const cleanupFinalResponse = (response: string): string => {
+    // Remove any leading content before the first HTML tag
+    const htmlStartIndex = response.indexOf('<html>');
+    if (htmlStartIndex !== -1) {
+      response = response.substring(htmlStartIndex);
+    } else {
+      // If no <html> tag, look for any HTML tag
+      const firstTagMatch = response.match(/<[a-z][^>]*>/i);
+      if (firstTagMatch && firstTagMatch.index !== undefined) {
+        response = response.substring(firstTagMatch.index);
+      }
+    }
+    
+    // Remove any empty lines
+    response = response.replace(/^\s*[\r\n]/gm, '');
+    
+    // Remove any model reasoning or non-HTML content at the beginning
+    // This regex looks for content before the first HTML tag
+    response = response.replace(/^[^<]*/g, '');
+    
+    // Remove any <safety_report> tags or similar wrapper tags
+    response = response.replace(/<\/?safety_report>/g, '');
+    
+    return response;
+  };
+
+  const performSafetyCheck = async () => {
+    try {
+      // Reset state
+      setIsProcessing(true);
+      setTraceContent("");
+      setCurrentChunk("");
+      setAuthError(null);
+      setFinalResponseReceived(false);
+
+      // Connect to WebSocket if not already connected
+      if (!safetyCheckWebSocket.isSocketConnected()) {
+        setIsConnecting(true);
+        try {
+          await safetyCheckWebSocket.connect();
+        } catch (error) {
+          // Make sure to reset connecting state on connection error
+          setIsConnecting(false);
+          setIsProcessing(false);
+          throw error; // Re-throw to be caught by the outer catch
+        }
+        setIsConnecting(false);
+      }
+
+      const queryObject = {
+        query: "Perform work order safety checks for WorkOrder. The workorder id, workorder location and start time information is available in below JSON::",
+        workorderdetails: {
+          work_order_id: workOrder.work_order_id,
+          workOrderLocationAssetDetails: workOrder,
+        },
+        session_id: customAlphabet("1234567890", 20)()
+      };
+
+      // The token will be automatically included by the WebSocket class
+      await safetyCheckWebSocket.performSafetyCheck(queryObject);
+      
+    } catch (error: any) {
+      console.error('Error sending safety check request:', error);
+      
+      // Always reset both states on any error
+      setIsConnecting(false);
+      setIsProcessing(false);
+      
+      // Check if it's an authentication error
+      if (error.message && error.message.includes('authentication')) {
+        setAuthError('Authentication failed. Please sign in again.');
+        onSafetyCheckError('Authentication failed');
+      } else {
+        onSafetyCheckError(`Failed to send safety check request: ${error.message || 'Unknown error'}`);
+      }
+    }
+  };
+
+  return (
+    <SpaceBetween direction="vertical" size="m">
+      {authError && (
+        <Box variant="error">
+          {authError}
+        </Box>
+      )}
+      
+      <Button 
+        onClick={performSafetyCheck} 
+        loading={isConnecting || isProcessing}
+        variant="primary"
+        disabled={isProcessing || isConnecting}
+      >
+        {isConnecting ? 'Connecting...' : isProcessing ? 'Processing...' : 'Perform Safety Check'}
+      </Button>
+      
+      {(isProcessing || (finalResponseReceived && showResults)) && (
+        <div className="trace-container">
+          {isProcessing && <h3 className="section-heading-processing">Processing Safety Check</h3>}
+          {finalResponseReceived && showResults && <h3 className="section-heading-complete">Safety Check Complete</h3>}
+          
+          {/* Single continuous trace block */}
+          <div className="agent-reasoning">
+            <h4 className="subsection-heading">Agent Reasoning</h4>
+            {traceContent ? (
+              <div className="trace-content">
+                {traceContent.split('\n\n').map((paragraph, index) => (
+                  <p key={index}>{paragraph}</p>
+                ))}
+              </div>
+            ) : (
+              <p>No reasoning information available yet.</p>
+            )}
+          </div>
+          
+          {/* Only show the response here if showResults is true */}
+          {currentChunk && showResults && (
+            <div className="current-response">
+              <h4 className="subsection-heading">Safety Briefing Response</h4>
+              <div 
+                className="response-text" 
+                dangerouslySetInnerHTML={{ __html: currentChunk }}
+              />
+            </div>
+          )}
+          
+          {isProcessing && (
+            <div className="processing-indicator">
+              <Spinner size="normal" /> Processing...
+            </div>
+          )}
+        </div>
+      )}
+    </SpaceBetween>
+  );
+};
+
+export default WebSocketSafetyCheck;

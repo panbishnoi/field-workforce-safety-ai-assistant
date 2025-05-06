@@ -13,10 +13,9 @@ from aws_cdk import (
 from constructs import Construct
 
 import core_constructs as coreconstructs
-from .safetycheckrequestflow import SafetyCheckRequestStack
 from .workorderlistflow import WorkOrderApiStack
-from .safetycheckprocessorflow import SafetyCheckProcessorStack
 from .vicemergencyflow import VicEmergencyStack
+from .safetycheckflow import WebSocketApiStack
 
 EMBEDDINGS_SIZE = 512
 
@@ -41,33 +40,11 @@ class BackendStack(NestedStack):
             "Cognito",
             region=self.region,
         )
-
         self.apigw = coreconstructs.CoreApiGateway(
             self,
             "ApiGateway",
             region=self.region,
             user_pool=self.cognito.user_pool,
-        )
-
-        # Create DynamoDB table to store workorder safety requests with stream enabled
-        self.work_order_requests_table = dynamodb.Table(
-            self,
-            "WorkOrderSafetyRequestsTable",
-            partition_key=dynamodb.Attribute(
-                name="requestId",
-                type=dynamodb.AttributeType.STRING
-            ),
-            stream=dynamodb.StreamViewType.NEW_IMAGE,
-            time_to_live_attribute="ttl",
-            removal_policy= RemovalPolicy.DESTROY
-        )
-
-        # Safety check request flow
-        self.safetycheckrequestflow = SafetyCheckRequestStack(
-            self,
-            "SafetyCheckRequestStack",
-            api_gateway=self.apigw,
-            work_order_requests_table=self.work_order_requests_table,
         )
 
         # APIGW for workorder list
@@ -87,27 +64,29 @@ class BackendStack(NestedStack):
             dynamo_db_location_table=location_table_name
         )
 
-        # SafetyCheck workflow
-        self.safetycheckProcessorStack = SafetyCheckProcessorStack(
-            self,
-            "SafetyCheckProcessorStack",
-            work_order_requests_table=self.work_order_requests_table,
-            agent_id=agent_id,
-            agent_alias_id=agent_alias_id,
-            dynamo_db_workorder_table=work_order_table_name,
-        )
-
         # Emergency Warnings flow
-        self.safetycheckProcessorStack = VicEmergencyStack(
+        self.vicemergencyStack = VicEmergencyStack(
             self,
             "VicEmergencyStack",
             api_gateway=self.apigw,
             dynamo_db_workorder_table=work_order_table_name,
         )
+        
+        # WebSocket API for real-time safety check
+        self.websocket_api_stack = WebSocketApiStack(
+            self,
+            "WebSocketApiStack",
+            agent_id=agent_id,
+            agent_alias_id=agent_alias_id,
+            region=self.region,
+            user_pool=self.cognito.user_pool.user_pool_id,
+            client_id=self.cognito.user_pool_client.user_pool_client_id,
+        )
 
         # Store outputs as properties for easy access by the frontend stack
         self.api_endpoint = self.apigw.rest_api.url
         self.workorder_api_endpoint = self.apigw_workorder.rest_api.url
+        self.websocket_api_endpoint = self.websocket_api_stack.websocket_api_endpoint
         self.region_name = self.region
         self.user_pool_id = self.cognito.user_pool.user_pool_id
         self.user_pool_client_id = self.cognito.user_pool_client.user_pool_client_id
@@ -133,6 +112,13 @@ class BackendStack(NestedStack):
             "WorkOrderApiEndpoint",
             value=self.workorder_api_endpoint,
             export_name=f"{Stack.of(self).stack_name}WorkOrderApiEndpoint",
+        )
+        
+        CfnOutput(
+            self,
+            "WebSocketApiEndpoint",
+            value=self.websocket_api_endpoint,
+            export_name=f"{Stack.of(self).stack_name}WebSocketApiEndpoint",
         )
         
         CfnOutput(

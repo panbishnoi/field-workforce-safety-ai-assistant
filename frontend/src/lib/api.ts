@@ -36,6 +36,17 @@ export interface WorkOrder {
   };
 }
 
+// WebSocket message interface
+export interface WebSocketMessage {
+  type: 'chunk' | 'trace' | 'status' | 'final' | 'error';
+  content?: string;
+  message?: string;
+  status?: string;
+  traceType?: string;
+  requestId?: string;
+  safetycheckresponse?: string;
+}
+
 // Use runtime config instead of env variables
 Amplify.configure({
   Auth: {
@@ -189,3 +200,143 @@ export async function postEmergencyCheckRequest(queryObject: EmergencyCheckQuery
     console.log("POST call failed: ", getErrorMessage(e));
   }
 }
+
+// WebSocket implementation
+class SafetyCheckWebSocket {
+  private socket: WebSocket | null = null;
+  private messageHandlers: ((message: WebSocketMessage) => void)[] = [];
+  private isConnected = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+
+  constructor() {
+    this.connect = this.connect.bind(this);
+    this.disconnect = this.disconnect.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.addMessageHandler = this.addMessageHandler.bind(this);
+    this.removeMessageHandler = this.removeMessageHandler.bind(this);
+  }
+
+  public async connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.socket && this.isConnected) {
+        resolve();
+        return;
+      }
+
+      try {
+        // Use the WebSocket API endpoint from config
+        const wsEndpoint = config.WEBSOCKET_API_ENDPOINT;
+        if (!wsEndpoint) {
+          reject(new Error('WebSocket API endpoint not configured'));
+          return;
+        }
+
+        this.socket = new WebSocket(wsEndpoint);
+
+        this.socket.onopen = () => {
+          console.log('WebSocket connected');
+          this.isConnected = true;
+          this.reconnectAttempts = 0;
+          resolve();
+        };
+
+        this.socket.onmessage = (event) => {
+          try {
+            const message = JSON.parse(event.data) as WebSocketMessage;
+            this.messageHandlers.forEach(handler => handler(message));
+          } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+          }
+        };
+
+        this.socket.onclose = () => {
+          console.log('WebSocket disconnected');
+          this.isConnected = false;
+          this.attemptReconnect();
+        };
+
+        this.socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          if (!this.isConnected) {
+            reject(error);
+          }
+        };
+      } catch (error) {
+        console.error('Error connecting to WebSocket:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private attemptReconnect() {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
+      
+      console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts})`);
+      
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+      }
+      
+      this.reconnectTimeout = setTimeout(() => {
+        this.connect().catch(error => {
+          console.error('Reconnection failed:', error);
+        });
+      }, delay);
+    } else {
+      console.error('Max reconnection attempts reached');
+    }
+  }
+
+  public disconnect(): void {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = null;
+      this.isConnected = false;
+      
+      if (this.reconnectTimeout) {
+        clearTimeout(this.reconnectTimeout);
+        this.reconnectTimeout = null;
+      }
+    }
+  }
+
+  public async sendMessage(action: string, data: any): Promise<void> {
+    if (!this.socket || !this.isConnected) {
+      throw new Error('WebSocket not connected');
+    }
+
+    // Get a fresh token using the existing getAuthToken function
+    const token = await getAuthToken();
+
+    const message = {
+      action,
+      token, // Include the token in every message
+      ...data
+    };
+
+    this.socket.send(JSON.stringify(message));
+  }
+
+  public async performSafetyCheck(queryObject: any): Promise<void> {
+    await this.sendMessage('safetyCheck', queryObject);
+  }
+
+  public addMessageHandler(handler: (message: WebSocketMessage) => void): void {
+    this.messageHandlers.push(handler);
+  }
+
+  public removeMessageHandler(handler: (message: WebSocketMessage) => void): void {
+    this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+  }
+
+  public isSocketConnected(): boolean {
+    return this.isConnected;
+  }
+}
+
+// Create a singleton instance
+export const safetyCheckWebSocket = new SafetyCheckWebSocket();

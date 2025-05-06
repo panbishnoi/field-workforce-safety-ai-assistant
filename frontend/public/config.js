@@ -1,6 +1,7 @@
 // This file will be replaced during deployment
 window.APP_CONFIG = {
   VITE_API_ENDPOINT: "",
+  VITE_WEBSOCKET_API_ENDPOINT: "",
   VITE_WORKORDER_API_ENDPOINT: "",
   VITE_REGION_NAME: "",
   VITE_COGNITO_USER_POOL_ID: "",

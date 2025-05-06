@@ -2,10 +2,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import '@components/WorkOrderDetails.css';
 import 'leaflet/dist/leaflet.css';
-import { postSafetyCheckRequest, pollSafetyCheckStatus, postEmergencyCheckRequest } from '@lib/api';
-import { customAlphabet } from "nanoid";
+import { postEmergencyCheckRequest } from '@lib/api';
 import UnifiedMap from '@components/UnifiedMap';
 import { Emergency } from '@/types/emergency';
+import WebSocketSafetyCheck from '@components/WebSocketSafetyCheck';
 import {
   Container,
   Header,
@@ -15,12 +15,6 @@ import {
   Box,
   ExpandableSection,
 } from "@cloudscape-design/components";
-
-interface SafetyCheckResponse {
-  requestId: string;
-  status: string;
-  safetycheckresponse: string;
-}
 
 interface LocationDetails {
   latitude: number;
@@ -48,40 +42,36 @@ const WorkOrderDetails = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLocationVisible, setIsLocationVisible] = useState(true);
+  const [isSafetyCheckVisible, setIsSafetyCheckVisible] = useState(true);
+  const [safetyCheckResponse, setSafetyCheckResponse] = useState<string>(workOrder?.safetycheckresponse || "");
   
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [loadingEmergencies, setLoadingEmergencies] = useState(false);
+  
   if (!workOrder) {
     return <div>No details found for this Work Order.</div>;
   }
 
+  const handleSafetyCheckComplete = (response: string) => {
+    // Update the state with the safety check response
+    setSafetyCheckResponse(response);
+    
+    // Also update the workOrder object if needed for persistence
+    workOrder.safetycheckresponse = response;
+    
+    setLoading(false);
+    setError(null);
+  };
 
-  const performSafetyCheck = async () => {
-    try {
-      setLoading(true);
-      const queryObject = {
-        query: "Perform work order safety checks for WorkOrder::",
-        workorderdetails: {
-          work_order_id: workOrder.work_order_id,
-          workOrderLocationAssetDetails: workOrder,
-        },
-        session_id: customAlphabet("1234567890", 20)()
-      };
-
-      const response = (await postSafetyCheckRequest(queryObject) as unknown) as SafetyCheckResponse;
-      if (response?.requestId) {
-        startPolling(response.requestId);
-      }
-    } catch (err) {
-      setError('Failed to initiate safety check');
-      setLoading(false);
-    }
+  const handleSafetyCheckError = (errorMsg: string) => {
+    setError(errorMsg);
+    setLoading(false);
   };
 
   const performEmergencyCheck = async () => {
     try {
       setLoadingEmergencies(true);
-            // Extract latitude and longitude
+      // Extract latitude and longitude
       const latitude = workOrder.location_details?.latitude;
       const longitude = workOrder.location_details?.longitude;
 
@@ -90,60 +80,18 @@ const WorkOrderDetails = () => {
         throw new Error('Work order location details are incomplete.');
       }
       const queryObject = {
-          latitude: latitude,
-          longitude: longitude,
-        };
+        latitude: latitude,
+        longitude: longitude,
+      };
 
       const response = (await postEmergencyCheckRequest(queryObject) as unknown) as unknown;
       setEmergencies(response as Emergency[]);
       console.log(response);
     } catch (err) {
-      setError('Failed to initiate safety check');
+      setError('Failed to initiate emergency check');
     } finally {
       setLoadingEmergencies(false);
     }
-  };
-
-
-  const checkStatus = async (requestId: string): Promise<boolean> => {
-    try {
-      const result = (await pollSafetyCheckStatus(requestId) as unknown) as SafetyCheckResponse;
-      if (result?.status === 'COMPLETED') {
-        workOrder.safetycheckresponse = result.safetycheckresponse;
-        setLoading(false);
-        setError(null); // Clear any previous errors when successful
-        return true;
-      }
-      return false;
-    } catch (err) {
-      setError('Failed to fetch status');
-      setLoading(false);
-      return true;
-    }
-  };
-
-  
-  const startPolling = async (requestId: string) => {
-    let attempts = 0;
-    const maxAttempts = 20;
-    const pollInterval = 3000;
-
-    const poll = async () => {
-      try {
-        attempts++;
-        const shouldStop = await checkStatus(requestId);
-        if (!shouldStop && attempts < maxAttempts) {
-          setTimeout(poll, pollInterval);
-        } else if (attempts >= maxAttempts) {
-          setError('Error in getting safety check response');
-          setLoading(false);
-        }
-      } catch (error) {
-        setError('Error in getting safety check response');
-        setLoading(false);
-      }
-    };
-    poll();
   };
 
   return (
@@ -156,15 +104,6 @@ const WorkOrderDetails = () => {
       {/* Work Order Details */}
       <Container
         header={<Header>Work Order Details</Header>}
-        footer={
-          <Button
-            variant="primary"
-            loading={loading}
-            onClick={performSafetyCheck}
-          >
-            Perform Safety Check
-          </Button>
-        }
       >
         <SpaceBetween size="m">
           <Box>
@@ -206,66 +145,77 @@ const WorkOrderDetails = () => {
         </SpaceBetween>
       </Container>
 
+
+
       {/* Location Section */}
       {workOrder.location_name && (
         <ExpandableSection
           headerText={
             <SpaceBetween direction="horizontal" size="xs">
               <span>Location Details</span>
-          </SpaceBetween>
-        }
+            </SpaceBetween>
+          }
           expanded={isLocationVisible}
           onChange={({ detail }) => setIsLocationVisible(detail.expanded)}
         >
           <SpaceBetween size="l">
-          {isLocationVisible && (
-            <>
-            {workOrder.location_details?.latitude && workOrder.location_details?.longitude ? (
-              <UnifiedMap 
-              centerPoint={[
-                workOrder.location_details?.longitude,
-                workOrder.location_details?.latitude,
-              ]}
-              description={workOrder.location_name} 
-              emergencies={emergencies}
-                />
-              ) : (
-                "No location coordinates available."
-              )}
-            </>
-          )}
-          <Button
-                variant="primary"
-                loading={loadingEmergencies}
-                onClick={performEmergencyCheck}
-              >
-                Load Emergency Warnings
+            {isLocationVisible && (
+              <>
+                {workOrder.location_details?.latitude && workOrder.location_details?.longitude ? (
+                  <UnifiedMap 
+                    centerPoint={[
+                      workOrder.location_details?.longitude,
+                      workOrder.location_details?.latitude,
+                    ]}
+                    description={workOrder.location_name} 
+                    emergencies={emergencies}
+                  />
+                ) : (
+                  "No location coordinates available."
+                )}
+              </>
+            )}
+            <Button
+              variant="primary"
+              loading={loadingEmergencies}
+              onClick={performEmergencyCheck}
+            >
+              Load Emergency Warnings
             </Button>
           </SpaceBetween>
         </ExpandableSection>
       )}
 
-      {/* Collapsible Location Section */}
+      {/* Safety Check Section */}
+      <ExpandableSection
+        headerText="Safety Check"
+        expanded={isSafetyCheckVisible}
+        onChange={({ detail }) => setIsSafetyCheckVisible(detail.expanded)}
+      >
+        <WebSocketSafetyCheck 
+          workOrder={workOrder}
+          onSafetyCheckComplete={handleSafetyCheckComplete}
+          onSafetyCheckError={handleSafetyCheckError}
+          showResults={false} // Don't show results in this component
+        />
+      </ExpandableSection>
 
-        {loading ? (
-          <div className="safety-check-response">
-            <p>Performing Work Order Safety Check...</p>
-          </div>
-        ) : error ? (
-          <div className="safety-check-response">{error}</div>
-        ) : workOrder.safetycheckresponse && (
+      {/* Safety Check Response */}
+      {error ? (
+        <div className="safety-check-response error">{error}</div>
+      ) : safetyCheckResponse && (
+        <Container
+          header={<Header variant="h2">
+            <span className="section-heading-complete">Safety Check Results</span>
+          </Header>}
+        >
           <div className="safety-check-response" 
-            dangerouslySetInnerHTML={{ __html:
-              workOrder.safetycheckresponse.replace(/^"|"$/g, '') // Remove leading and trailing quotes
-              .replace(/\\n/g, '')   // Remove \n characters
-              .replace(/\\u00b0C/g, '°C') // Replace \u00b0C with °C (escaped version)
-              .replace(/\u00b0C/g, '°C')
-               }} />
-        )}
-
-  </SpaceBetween>
+            dangerouslySetInnerHTML={{ __html: safetyCheckResponse }} 
+          />
+        </Container>
+      )}
+    </SpaceBetween>
   );
 };
-
 
 export default WorkOrderDetails;

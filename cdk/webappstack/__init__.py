@@ -31,6 +31,7 @@ class FrontendStack(NestedStack):
     def __init__(self, scope: Construct, id: str, 
                  api_endpoint: str,
                  workorder_api_endpoint: str,
+                 websocket_api_endpoint: str,
                  region_name: str,
                  cognito_user_pool_id: str,
                  cognito_user_pool_client_id: str,
@@ -157,6 +158,7 @@ class FrontendStack(NestedStack):
             properties={
                 "ApiEndpoint": api_endpoint,
                 "WorkorderApiEndpoint": workorder_api_endpoint,
+                "WebSocketApiEndpoint": websocket_api_endpoint,
                 "RegionName": region_name,
                 "CognitoUserPoolId": cognito_user_pool_id,
                 "CognitoUserPoolClientId": cognito_user_pool_client_id,
@@ -171,11 +173,13 @@ class FrontendStack(NestedStack):
         config_custom_resource.node.add_dependency(bucket_deployment)
 
 
-        # Create Origin Access Control
+        # Create Origin Access Control with a unique name
+        stack_id = self.node.scope.node.id.lower()
+        unique_oac_name = f"WebappOAC-{stack_id}-{id}"
         origin_access_control = cloudfront.CfnOriginAccessControl(
             self, "WebappOriginAccessControl",
             origin_access_control_config=cloudfront.CfnOriginAccessControl.OriginAccessControlConfigProperty(
-                name="WebappOAC",
+                name=unique_oac_name,
                 origin_access_control_origin_type="s3",
                 signing_behavior="always",
                 signing_protocol="sigv4"

@@ -95,6 +95,7 @@ class FieldWorkforceSafetyParentStack(Stack):
                 "FrontendStack",
                 api_endpoint=backend_stack.api_endpoint,
                 workorder_api_endpoint=backend_stack.workorder_api_endpoint,
+                websocket_api_endpoint=backend_stack.websocket_api_endpoint,
                 region_name=backend_stack.region_name,
                 cognito_user_pool_id=backend_stack.user_pool_id,
                 cognito_user_pool_client_id=backend_stack.user_pool_client_id,

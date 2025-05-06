@@ -4,6 +4,7 @@ declare global {
     APP_CONFIG: {
       VITE_API_ENDPOINT: string;
       VITE_WORKORDER_API_ENDPOINT: string;
+      VITE_WEBSOCKET_API_ENDPOINT: string;
       VITE_REGION_NAME: string;
       VITE_COGNITO_USER_POOL_ID: string;
       VITE_COGNITO_USER_POOL_CLIENT_ID: string;
@@ -32,6 +33,7 @@ export function getConfig(key: string): string {
 export const config = {
   API_ENDPOINT: getConfig('VITE_API_ENDPOINT'),
   WORKORDER_API_ENDPOINT: getConfig('VITE_WORKORDER_API_ENDPOINT'),
+  WEBSOCKET_API_ENDPOINT: getConfig('VITE_WEBSOCKET_API_ENDPOINT'),
   REGION_NAME: getConfig('VITE_REGION_NAME'),
   COGNITO_USER_POOL_ID: getConfig('VITE_COGNITO_USER_POOL_ID'),
   COGNITO_USER_POOL_CLIENT_ID: getConfig('VITE_COGNITO_USER_POOL_CLIENT_ID'),

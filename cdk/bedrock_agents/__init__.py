@@ -817,17 +817,17 @@ class BedrockAgentsStack(NestedStack):
 
         # Create Weather Agent Action Group
         weather_agent_action_group = bedrock.CfnAgent.AgentActionGroupProperty(
-            action_group_name="WeatherForecast",
+            action_group_name="WeatherAlert",
             action_group_executor=bedrock.CfnAgent.ActionGroupExecutorProperty(
                 lambda_=weather_agent_function.function_arn
             ),
-            description="Get weather forecast for a specific location and time",
+            description="Get weather forecast and alerts for a specific location and time",
             action_group_state="ENABLED",
             function_schema=bedrock.CfnAgent.FunctionSchemaProperty(
                 functions=[
                     bedrock.CfnAgent.FunctionProperty(
-                        name="weatherforecast",
-                        description="Get weather forecast at lat and long for the datetime entered",
+                        name="weatherAlert",
+                        description="Get weather forecast and alerts at lat and long for the datetime entered",
                         parameters={
                             "lat": bedrock.CfnAgent.ParameterDetailProperty(
                                 type="string",
@@ -912,8 +912,8 @@ class BedrockAgentsStack(NestedStack):
             agent_name="FieldSafetyWeatherAgent",
             agent_resource_role_arn=weather_agent_role.role_arn,
             foundation_model=collaborator_foundation_model,
-            description = "You are a weather forecast agent. On getting access to the latitude, longitude and target_date_time, you will be able to forecast the weather",
-            instruction="Goal: Fetch the weather information at a latitude and longitude at a target datetime.,Instructions: Fetch the weather information at a latitude and longitude at a target datetime. You may get the Workorder details in JSON format including workorder location",
+            description = "You are a weather forecast and alert agent. On getting access to the latitude, longitude and target_date_time, you will be able to provide weather warnings and alerts",
+            instruction="Goal: Fetch the weather information at a latitude and longitude at a target datetime.,Instructions: Fetch the weather information and alerts at a latitude and longitude at a target datetime. You may get the Workorder details in JSON format including workorder location",
             action_groups=[weather_agent_action_group],
             idle_session_ttl_in_seconds=1800,
             auto_prepare=True  # Use autoPrepare instead of custom resource
@@ -988,7 +988,7 @@ class BedrockAgentsStack(NestedStack):
             agent_resource_role_arn=supervisor_agent_role.role_arn,
             foundation_model=supervisor_foundation_model,
             description = "A specialized safety report generator that performs work order safety assessment and generates a comprehensive Work Order Safety Briefiing in HTML format.",
-            instruction="""You are a Workorder Safety helper bot. You must perform hazard, emergency and weather checks against a supplied work order. When you receive a work order in JSON format, extract the workorder and location information from the JSON and perform hazard, weather, and emergency checks using provided agents. You must make a call to all available collaborators to create a comprehensive safety briefing.  IMPORTANT:  Do NOT include any internal reasoning, agent thoughts, or process steps in the final report.  Only output the final safety report in valid HTML, suitable for rendering in a web application.  The report must have a clear title and use proper HTML structure: headings, paragraphs, bullet points, and semantic tags.  The output must be strictly limited to the HTML report content-do not include any other text, logs, or explanations""",
+            instruction="""You are a Workorder Safety helper bot. You must perform hazard, emergency and weather safety checks against a supplied work order. When you receive a work order in JSON format, extract the workorder and location information from the JSON and perform hazard, weather, and emergency checks using provided agents. You must make a call to all available collaborators to create a comprehensive safety briefing.  IMPORTANT:  Do NOT include any internal reasoning, agent thoughts, or process steps in the final report.  Only output the final safety report in valid HTML, suitable for rendering in a web application.  The report must have a clear title and use proper HTML structure: headings, paragraphs, bullet points, and semantic tags.  The output must be strictly limited to the HTML report content-do not include any other text, logs, or explanations""",
             idle_session_ttl_in_seconds=1800,
             auto_prepare=True,  # Use autoPrepare instead of custom resource
             # Add agent collaboration configuration
