@@ -80,6 +80,21 @@ class CoreApiGateway(Construct):
             validate_request_parameters=False,
         )
 
+        # Add suppressions for disabled logging
+        NagSuppressions.add_resource_suppressions(
+            self.rest_api,
+            [
+                NagPackSuppression(
+                    id="AwsSolutions-APIG1",
+                    reason="API Gateway logging intentionally disabled to avoid CloudWatch Logs role ARN requirement"
+                ),
+                NagPackSuppression(
+                    id="AwsSolutions-APIG6",
+                    reason="API Gateway logging intentionally disabled to avoid CloudWatch Logs role ARN requirement"
+                )
+            ],
+            apply_to_children=True
+        ) 
         # Choose a validator based on your needs
 
         self.request_params_validator = apigateway.RequestValidator(

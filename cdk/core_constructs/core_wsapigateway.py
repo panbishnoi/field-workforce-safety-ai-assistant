@@ -10,7 +10,7 @@ from aws_cdk import (
 )
 from aws_cdk.aws_apigatewayv2_integrations import WebSocketLambdaIntegration
 from constructs import Construct
-from cdk_nag import NagSuppressions
+from cdk_nag import NagSuppressions,NagPackSuppression
 
 class CoreWebSocketApiGateway(Construct):
     def __init__(
@@ -77,7 +77,21 @@ class CoreWebSocketApiGateway(Construct):
                     "reason": "Authorization handled in Lambda function",
                 }
             ]
-        )
+        )         
+        # Add suppressions for disabled logging
+        NagSuppressions.add_resource_suppressions(
+            self.stage,
+            [
+                NagPackSuppression(
+                    id="AwsSolutions-APIG1",
+                    reason="API Gateway logging intentionally disabled to avoid CloudWatch Logs role ARN requirement"
+                ),
+                NagPackSuppression(
+                    id="AwsSolutions-APIG6",
+                    reason="API Gateway logging intentionally disabled to avoid CloudWatch Logs role ARN requirement"
+                )
+            ]
+        )            
 
         # Deploy to stage with logging
         self.stage = apigateway.WebSocketStage(
