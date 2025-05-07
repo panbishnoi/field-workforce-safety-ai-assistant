@@ -2,7 +2,7 @@ import { useAuthenticator } from "@aws-amplify/ui-react";
 import TopNavigation from "@cloudscape-design/components/top-navigation";
 import { useEffect, useState } from "react";
 import { fetchUserAttributes } from "aws-amplify/auth";
-
+import { config } from "../lib/config";
 // Define the type for user attributes
 type UserAttributes = {
   email?: string;
@@ -11,7 +11,7 @@ type UserAttributes = {
 
 export default function NavBar() {
   const { user, signOut } = useAuthenticator((context) => [context.user]);
-  const env = import.meta.env; // Vite environment variables
+
   
   // Update the type to match fetchUserAttributes output
   const [userAttributes, setUserAttributes] = useState<UserAttributes>({});
@@ -36,7 +36,7 @@ export default function NavBar() {
     <TopNavigation
       identity={{
         href: "/",
-        title: env.VITE_APP_NAME,
+        title: config.APP_NAME,
       }}
       utilities={[
         {
