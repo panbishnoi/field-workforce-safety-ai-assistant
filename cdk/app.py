@@ -19,7 +19,7 @@ from bedrock_agents import BedrockAgentsStack
 from backend import BackendStack
 from webappstack import FrontendStack
 
-class FieldWorkforceSafetyParentStack(Stack):
+class FieldWorkForceSafetyMainStack(Stack):
     """Parent stack that contains all nested stacks"""
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -68,7 +68,7 @@ class FieldWorkforceSafetyParentStack(Stack):
         # Deploy Bedrock Agents nested stack (always deployed)
         bedrock_agents_stack = BedrockAgentsStack(
             self,
-            "BedrockAgentStack",
+            "FieldSafetyBedrockAgentStack",
             collaborator_foundation_model=collaborator_foundation_model,
             supervisor_foundation_model=supervisor_foundation_model,
             openweather_api_key=openweather_api_key
@@ -79,7 +79,7 @@ class FieldWorkforceSafetyParentStack(Stack):
             # Deploy Backend stack
             backend_stack = BackendStack(
                 self,
-                "BackendAPIStack",
+                "FieldSafetyBackendAPIStack",
                 language_code=language_code,
                 agent_id=bedrock_agents_stack.supervisor_agent_id,
                 agent_alias_id=bedrock_agents_stack.supervisor_agent_alias_id,
@@ -92,7 +92,7 @@ class FieldWorkforceSafetyParentStack(Stack):
             # Deploy Frontend stack
             frontend_stack = FrontendStack(
                 self,
-                "FrontendStack",
+                "FieldSafetyFrontendStack",
                 api_endpoint=backend_stack.api_endpoint,
                 workorder_api_endpoint=backend_stack.workorder_api_endpoint,
                 websocket_api_endpoint=backend_stack.websocket_api_endpoint,
@@ -114,6 +114,6 @@ class FieldWorkforceSafetyParentStack(Stack):
 
 # Create the app and deploy the parent stack
 app = cdk.App()
-parent_stack = FieldWorkforceSafetyParentStack(app, "FieldWorkforceSafetyParentStack")
+parent_stack = FieldWorkForceSafetyMainStack(app, "FieldWorkForceSafetyMainStack")
 cdk.Aspects.of(app).add(AwsSolutionsChecks())
 app.synth()

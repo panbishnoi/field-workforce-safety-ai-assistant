@@ -64,7 +64,7 @@ pip install -r requirements.txt
 
 3. Log in to the AWS ECR Public registry. This is needed to download docker images for builds.
 ```bash
-aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin public.ecr.aws
 ```
 
 4. If this is the first time using CDK in this account and region, bootstrap CDK. This is a one-time setup that provisions resources CDK needs to deploy your stacks.
@@ -72,9 +72,9 @@ aws ecr-public get-login-password --region us-east-1 | docker login --username A
 cdk bootstrap
 ```
 
-5. Deploy the FieldWorkforceSafetyParentStack stack with required parameters:
+5. Deploy the FieldWorkForceSafetyMainStack stack with required parameters:
 ```bash    
-cdk deploy FieldWorkforceSafetyParentStack --require-approval never --context openweather_api_key="YOUR_API_KEY" --context collaborator_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0" --context supervisor_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0"
+cdk deploy FieldWorkForceSafetyMainStack --require-approval never --context openweather_api_key="YOUR_API_KEY" --context collaborator_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0" --context supervisor_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0"
 ```
 
 ## Clean Up
@@ -84,7 +84,7 @@ To avoid further charges, follow the tear down procedure:
 
 2. If you deployed using CDK directly, destroy the parent stack:
 ```bash
-cdk destroy FieldWorkforceSafetyParentStack --require-approval never
+cdk destroy FieldWorkForceSafetyMainStack --require-approval never
 ```
 
 For a comprehensive list of arguments and options, consult the [CDK CLI documentation](https://docs.aws.amazon.com/cdk/v2/guide/cli.html).

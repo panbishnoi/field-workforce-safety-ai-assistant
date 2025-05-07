@@ -239,9 +239,9 @@ Resources:
                 - echo "Building project..."
                 - cd cdk
                 - pip install -r requirements.txt
-                - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+                - aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin public.ecr.aws
                 - cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
-                - cdk deploy FieldWorkforceSafetyParentStack --require-approval never --context openweather_api_key="$OPENWEATHER_API_KEY" --context collaborator_foundation_model="$COLLABORATOR_FOUNDATION_MODEL" --context supervisor_foundation_model="$SUPERVISOR_FOUNDATION_MODEL" --context deploy_frontend="$DEPLOY_FRONTEND"
+                - cdk deploy FieldWorkForceSafetyMainStack --require-approval never --context openweather_api_key="$OPENWEATHER_API_KEY" --context collaborator_foundation_model="$COLLABORATOR_FOUNDATION_MODEL" --context supervisor_foundation_model="$SUPERVISOR_FOUNDATION_MODEL" --context deploy_frontend="$DEPLOY_FRONTEND"
                 - echo "Build completed successfully"
             post_build:
               commands:
@@ -441,7 +441,7 @@ Resources:
               
               physical_id = event.get('PhysicalResourceId', 'BuildTrigger')
               
-              # For Delete requests, delete the FieldWorkforceSafetyParentStack and send a response
+              # For Delete requests, delete the FieldWorkForceSafetyMainStack and send a response
               if event.get('RequestType') == 'Delete':
                   try:
                       # Delete the CDK-deployed stack
@@ -449,18 +449,18 @@ Resources:
                       
                       # Check if the stack exists before attempting to delete
                       try:
-                          cfn.describe_stacks(StackName="FieldWorkforceSafetyParentStack")
-                          print("Deleting FieldWorkforceSafetyParentStack...")
-                          cfn.delete_stack(StackName="FieldWorkforceSafetyParentStack")
-                          print("Delete request for FieldWorkforceSafetyParentStack sent successfully")
+                          cfn.describe_stacks(StackName="FieldWorkForceSafetyMainStack")
+                          print("Deleting FieldWorkForceSafetyMainStack...")
+                          cfn.delete_stack(StackName="FieldWorkForceSafetyMainStack")
+                          print("Delete request for FieldWorkForceSafetyMainStack sent successfully")
                       except cfn.exceptions.ClientError as e:
                           # If the stack doesn't exist, that's fine
                           if "does not exist" in str(e):
-                              print("FieldWorkforceSafetyParentStack does not exist, nothing to delete")
+                              print("FieldWorkForceSafetyMainStack does not exist, nothing to delete")
                           else:
                               print(f"Error checking stack: {str(e)}")
                   except Exception as e:
-                      print(f"Error deleting FieldWorkforceSafetyParentStack: {str(e)}")
+                      print(f"Error deleting FieldWorkForceSafetyMainStack: {str(e)}")
                       # Continue with the response even if there was an error
                   
                   # Send success response for the custom resource
