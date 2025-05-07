@@ -64,7 +64,7 @@ pip install -r requirements.txt
 
 3. Log in to the AWS ECR Public registry. This is needed to download docker images for builds.
 ```bash
-aws ecr-public get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin public.ecr.aws
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 ```
 
 4. If this is the first time using CDK in this account and region, bootstrap CDK. This is a one-time setup that provisions resources CDK needs to deploy your stacks.
