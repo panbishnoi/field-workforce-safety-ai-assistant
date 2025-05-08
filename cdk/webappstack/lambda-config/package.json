@@ -1,9 +1,0 @@
-{
-  "name": "config-update-lambda",
-  "version": "1.0.0",
-  "description": "Lambda function to update config.js with backend values",
-  "main": "index.js",
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.400.0"
-  }
-}

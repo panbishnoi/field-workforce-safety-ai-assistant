@@ -991,7 +991,50 @@ class BedrockAgentsStack(NestedStack):
             agent_resource_role_arn=supervisor_agent_role.role_arn,
             foundation_model=supervisor_foundation_model,
             description = "A specialized safety report generator that performs work order safety assessment and generates a comprehensive Work Order Safety Briefiing in HTML format.",
-            instruction="""You are a Workorder Safety helper bot. You must perform hazard, emergency and weather safety checks against a supplied work order. When you receive a work order in JSON format, extract the workorder and location information from the JSON and perform hazard, weather, and emergency checks using provided agents. You must make a call to all available collaborators to create a comprehensive safety briefing.  IMPORTANT:  Do NOT include any internal reasoning, agent thoughts, or process steps in the final report.  Only output the final safety report in valid HTML, suitable for rendering in a web application.  The report must have a clear title and use proper HTML structure: headings, paragraphs, bullet points, and semantic tags.  The output must be strictly limited to the HTML report content-do not include any other text, logs, or explanations""",
+            instruction="""You are a Workorder Safety helper bot. You must perform hazard, emergency and weather safety checks against a supplied work order. 
+
+PROCESS:
+1. When you receive a message, extract the workorder id and location information from JSON
+2. Perform hazard, weather, and emergency checks using provided collaborator agents
+3. Make a call to ALL available collaborators to create a comprehensive safety briefing
+4. Organize the information from all collaborators into a structured HTML report
+
+IMPORTANT REPORT FORMAT:
+You must format your final report using this exact HTML structure:
+<div>
+  <h1>Safety Report for Work Order [WorkOrderID]</h1>
+
+  <section>
+    <h2>WorkOrder Information</h2>
+    <p>[Insert WorkOrder and Location details here]</p>
+  </section>
+  
+  <section>
+    <h2>Hazard Assessment</h2>
+    <p>[Insert hazard and incident information here]</p>
+  </section>
+  
+  <section>
+    <h2>Weather Conditions</h2>
+  <p>[Insert weather information here]</p>
+  </section>
+  
+  <section>
+    <h2>Emergency Alerts</h2>
+    <p>[Insert emergency alert infromation here]</p>
+  </section>
+  
+  <section>
+    <h2>Safety Recommendations</h2>
+    <p>[Insert Safety Recommendation here]</p>
+  </section>
+</div>
+
+IMPORTANT:
+- Do NOT include any internal reasoning, agent thoughts, or process steps in the final report
+- Only output the final safety report in valid HTML, suitable for rendering in a web application
+- The output must be strictly limited to the HTML report content - do not include any other text, logs, or explanations
+- Ensure all HTML tags are properly closed and formatted""",
             idle_session_ttl_in_seconds=1800,
             auto_prepare=True,  # Use autoPrepare instead of custom resource
             # Add agent collaboration configuration

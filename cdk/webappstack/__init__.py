@@ -120,11 +120,11 @@ class FrontendStack(NestedStack):
         config_lambda = lambda_.Function(
             self, "ConfigUpdateLambda",
             function_name=function_name,
-            runtime=lambda_.Runtime.NODEJS_20_X,
-            handler="index.handler",
+            runtime=lambda_.Runtime.PYTHON_3_12,
+            handler="index.lambda_handler",
             timeout=Duration.minutes(5),
             memory_size=512,
-            code=lambda_.Code.from_asset("./webappstack/lambda-config"),
+            code=lambda_.Code.from_asset("./webappstack/lambda-config/"),
             environment={
                 "S3_BUCKET_NAME": webapp_bucket.bucket_name
             }
@@ -150,28 +150,6 @@ class FrontendStack(NestedStack):
                  "reason": "This is a CDK-managed Lambda function where we cannot directly control the runtime"
             }]
         )
-
-        # Create a custom resource to trigger the Lambda function
-        config_custom_resource = CustomResource(
-            self, "ConfigUpdateResource",
-            service_token=provider.service_token,
-            properties={
-                "ApiEndpoint": api_endpoint,
-                "WorkorderApiEndpoint": workorder_api_endpoint,
-                "WebSocketApiEndpoint": websocket_api_endpoint,
-                "RegionName": region_name,
-                "CognitoUserPoolId": cognito_user_pool_id,
-                "CognitoUserPoolClientId": cognito_user_pool_client_id,
-                "CognitoIdentityPoolId": cognito_identity_pool_id,
-                "BuildTimestamp": time.time()  # Force update on each deployment
-            }
-        )
-        
-
-
-        # Ensure the custom resource runs after the bucket deployment completes
-        config_custom_resource.node.add_dependency(bucket_deployment)
-
 
         # Create Origin Access Control with a unique name
         stack_id = self.node.scope.node.id.lower()
@@ -213,11 +191,33 @@ class FrontendStack(NestedStack):
             ]
         )
         self.frontend_url = f"https://{distribution.distribution_domain_name}"
+
+        # Create a custom resource to trigger the Lambda function
+        config_custom_resource = CustomResource(
+            self, "ConfigUpdateResource",
+            service_token=provider.service_token,
+            properties={
+                "ApiEndpoint": api_endpoint,
+                "WorkorderApiEndpoint": workorder_api_endpoint,
+                "WebSocketApiEndpoint": websocket_api_endpoint,
+                "RegionName": region_name,
+                "CognitoUserPoolId": cognito_user_pool_id,
+                "CognitoUserPoolClientId": cognito_user_pool_client_id,
+                "CognitoIdentityPoolId": cognito_identity_pool_id,
+                "CdnDistributionUrl": f"https://{distribution.distribution_domain_name}",
+                "BuildTimestamp": time.time()  # Force update on each deployment
+            }
+        )
+        
+        # Ensure the custom resource runs after the bucket deployment completes
+        config_custom_resource.node.add_dependency(bucket_deployment)
+
         # Output CloudFront URL
         CfnOutput(
             self, "FrontendUrl",
             value=f"https://{distribution.distribution_domain_name}"
         )
+        
 
         # Add NAG suppressions
         NagSuppressions.add_resource_suppressions(

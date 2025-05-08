@@ -116,24 +116,14 @@ def handle_message(api_gateway_management, connection_id, event):
         try:
             # Extract query object
             query_object = event_body['query']
-            workorderdetails = event_body['workorderdetails']
-            work_order_id = workorderdetails['work_order_id']
-            # Remove safetycheckresponse from nested workOrderLocationAssetDetails
-            if "workOrderLocationAssetDetails" in workorderdetails:
-                workOrderLocationAssetDetails = workorderdetails["workOrderLocationAssetDetails"]
-                if "safetycheckresponse" in workOrderLocationAssetDetails:
-                    del workOrderLocationAssetDetails["safetycheckresponse"]
-                if "safetyCheckPerformedAt" in workOrderLocationAssetDetails:
-                    del workOrderLocationAssetDetails["safetyCheckPerformedAt"]
+            workOrderLocationDetails = event_body['workOrderLocationDetails']
+
 
             # Create prompt string by concatenating query and workorder details
-            payload = f"{query_object} {json.dumps(workorderdetails)}"    
+            payload = f"{query_object} {json.dumps(workOrderLocationDetails)}"    
         except Exception as ex:
             logger.error(f"Error in getting work order: {str(ex)}")
 
-        logger.info('work_order_id is :',work_order_id)
-        logger.info('payload is :',payload)
-  
         logger.info(f"Performing safety checks for: {payload}")
         
 
@@ -185,11 +175,13 @@ def handle_message(api_gateway_management, connection_id, event):
         return {'statusCode': 200, 'body': 'Message sent'}
                 
     except Exception as e:
+        logger.error(f"handle_messageerror: {str(e)}")
+        logger.error(traceback.format_exc())
         send_to_client(api_gateway_management, connection_id, {
-            'type': 'final',
+            'type': 'error',
             'requestId': request_id,
             'status': 'COMPLETED',
-            'safetycheckresponse': "Error in performing safety check"
+            'safetycheckresponse': "Error in performing safety check::"+str(e)
         })
         return {'statusCode': 500, 'body': f'Failed to process message: {str(e)}'}
 

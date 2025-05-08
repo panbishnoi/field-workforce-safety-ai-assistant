@@ -11,5 +11,7 @@ window.APP_CONFIG = {
   VITE_APP_NAME: "Field Workforce safety assistant",
   VITE_WorkOrder_API_NAME: "WorkOrderAPI",
   VITE_PROTOTYPE_NAME: "WorkOrderSafetyDemo",
-  VITE_COGNITO_DOMAIN: ".auth.us-east-1.amazoncognito.com/"
+  VITE_COGNITO_DOMAIN: ".auth.us-east-1.amazoncognito.com/",
+  VITE_APP_REDIRECT_SIGN_IN_URL: "",
+  VITE_APP_REDIRECT_SIGN_OUT_URL: ""
 };

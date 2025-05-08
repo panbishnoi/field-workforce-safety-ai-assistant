@@ -14,6 +14,8 @@ declare global {
       VITE_WorkOrder_API_NAME: string;
       VITE_PROTOTYPE_NAME: string;
       VITE_COGNITO_DOMAIN: string;
+      VITE_APP_REDIRECT_SIGN_IN_URL: string;
+      VITE_APP_REDIRECT_SIGN_OUT_URL: string;
     };
   }
 }
@@ -43,7 +45,9 @@ export const config = {
   WorkOrder_API_NAME: getConfig('VITE_WorkOrder_API_NAME'),
   PROTOTYPE_NAME: getConfig('VITE_PROTOTYPE_NAME'),
   COGNITO_DOMAIN: getConfig('VITE_COGNITO_DOMAIN'),
-  AWS_REGION: getConfig('VITE_REGION_NAME'), // For compatibility with existing code
+  AWS_REGION: getConfig('VITE_REGION_NAME'), 
+  APP_REDIRECT_SIGN_IN_URL: getConfig('VITE_APP_REDIRECT_SIGN_IN_URL'),
+  APP_REDIRECT_SIGN_OUT_URL: getConfig('VITE_APP_REDIRECT_SIGN_OUT_URL'),
 };
 
 export default config;

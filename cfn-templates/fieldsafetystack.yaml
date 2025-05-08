@@ -267,6 +267,7 @@ Resources:
         ZipFile: |
           import json
           import urllib3
+          import boto3
           
           SUCCESS = "SUCCESS"
           FAILED = "FAILED"
@@ -278,6 +279,21 @@ Resources:
                       response_data['BuildStatus'] = 'COMPLETED'
                   else:
                       response_data['BuildStatus'] = 'FAILED'
+              
+              # If this is a successful build completion, try to get the FrontendUrl from the nested stack
+              if response_status == SUCCESS and event.get('RequestType') != 'Delete':
+                  try:
+                      cfn = boto3.client('cloudformation')
+                      response = cfn.describe_stacks(StackName="FieldWorkForceSafetyMainStack")
+                      
+                      for stack in response['Stacks']:
+                          for output in stack.get('Outputs', []):
+                              if output.get('OutputKey') == 'FrontendUrl':
+                                  response_data['FrontendUrl'] = output.get('OutputValue')
+                                  print(f"Found FrontendUrl: {response_data['FrontendUrl']}")
+                                  break
+                  except Exception as e:
+                      print(f"Error retrieving FrontendUrl: {str(e)}")
               
               response_body = {
                   'Status': response_status,
@@ -525,6 +541,9 @@ Resources:
     Properties:
       ServiceToken: !GetAtt BuildTriggerLambda.Arn
 
+Conditions:
+  HasFrontendUrl: !Not [!Equals [!GetAtt BuildTrigger.FrontendUrl, ""]]
+
 Outputs:
   DeploymentStatus:
     Description: Status of the deployment
@@ -535,3 +554,7 @@ Outputs:
   StateMachineArn:
     Description: ARN of the Step Functions state machine
     Value: !Ref BuildStateMachine
+  FrontendUrl:
+    Description: URL of the deployed frontend application
+    Value: !GetAtt BuildTrigger.FrontendUrl
+    Condition: HasFrontendUrl

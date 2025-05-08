@@ -30,13 +30,13 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       console.log('Received WebSocket message:', message);
 
       // Check if the message is in the nested format
-      const actualMessage = message.message ? message.message : message;
-      const messageType = actualMessage.type;
+      const webSocketMessage = message.message ? message.message : message;
+      const messageType = webSocketMessage.type;
 
       switch (messageType) {
         case 'chunk':
-          if (actualMessage.content) {
-            setCurrentChunk(prev => prev + actualMessage.content);
+          if (webSocketMessage.content) {
+            setCurrentChunk(prev => prev + webSocketMessage.content);
           }
           break;
         case 'trace':
@@ -45,13 +45,13 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
           break;
         case 'final':
           // Process final message
-          handleFinalMessage(actualMessage);
+          handleFinalMessage(webSocketMessage);
           break;
         case 'error':
           // Reset states on error
           setIsProcessing(false);
           setIsConnecting(false);
-          onSafetyCheckError(actualMessage.message || 'Unknown error');
+          onSafetyCheckError(webSocketMessage.message || 'Unknown error');
           break;
       }
     };
@@ -73,8 +73,8 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
 
   const handleTraceMessage = (message: WebSocketMessage) => {
     // Extract the actual message content (handle nested structure)
-    const actualMessage = message.message ? message.message : message;
-    const content = actualMessage.content;
+    const webSocketMessage = message.message ? message.message : message;
+    const content = webSocketMessage.content;
     
     if (!content) return;
     
@@ -186,10 +186,12 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       }
 
       const queryObject = {
-        query: "Perform safety checks for WorkOrder:",
-        workorderdetails: {
-          work_order_id: workOrder.work_order_id,
-          workOrderLocationAssetDetails: workOrder,
+        query: `Perform safety checks for Work Order Id ${workOrder.work_order_id}, scheduled for ${workOrder.scheduled_start_timestamp}, with location details as :: `,
+        workOrderLocationDetails: {
+          location_name: workOrder.location_details?.location_name,
+          address: workOrder.location_details?.address,
+          latitude: workOrder.location_details?.latitude,
+          longitude: workOrder.location_details?.longitude,
         },
         session_id: customAlphabet("1234567890", 20)()
       };
