@@ -541,9 +541,6 @@ Resources:
     Properties:
       ServiceToken: !GetAtt BuildTriggerLambda.Arn
 
-Conditions:
-  HasFrontendUrl: !Not [!Equals [!GetAtt BuildTrigger.FrontendUrl, ""]]
-
 Outputs:
   DeploymentStatus:
     Description: Status of the deployment
@@ -557,4 +554,3 @@ Outputs:
   FrontendUrl:
     Description: URL of the deployed frontend application
     Value: !GetAtt BuildTrigger.FrontendUrl
-    Condition: HasFrontendUrl

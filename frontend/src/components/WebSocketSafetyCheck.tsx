@@ -189,7 +189,6 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
         query: `Perform safety checks for Work Order Id ${workOrder.work_order_id}, scheduled for ${workOrder.scheduled_start_timestamp}, with location details as :: `,
         workOrderLocationDetails: {
           location_name: workOrder.location_details?.location_name,
-          address: workOrder.location_details?.address,
           latitude: workOrder.location_details?.latitude,
           longitude: workOrder.location_details?.longitude,
         },
