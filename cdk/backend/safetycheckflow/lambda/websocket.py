@@ -29,16 +29,17 @@ AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 AGENT_ID = os.getenv("AGENT_ID")
 
 bedrock_agent_runtime_client = boto3.client(
-        'bedrock-agent-runtime',
-        config=Config(
-            retries=dict(
-                max_attempts=3,
-                mode='adaptive'
-            ),
-            read_timeout=120,
-            connect_timeout=5
-        )
-)    
+    'bedrock-agent-runtime',
+    config=Config(
+        retries={
+            'max_attempts': 5, 
+            'mode': 'standard' 
+        },
+        read_timeout=80,       
+        connect_timeout=10,    
+        region_name= REGION 
+    )
+)
 def verify_token(token: str) -> dict:
     try:
         url = f"https://cognito-idp.{REGION}.amazonaws.com/{USER_POOL_ID}/.well-known/jwks.json"
@@ -116,11 +117,10 @@ def handle_message(api_gateway_management, connection_id, event):
         try:
             # Extract query object
             query_object = event_body['query']
-            workOrderLocationDetails = event_body['workOrderLocationDetails']
-
+            workOrderDetails = event_body['workOrderDetails']
 
             # Create prompt string by concatenating query and workorder details
-            payload = f"{query_object} {json.dumps(workOrderLocationDetails)}"    
+            payload = f"{query_object} {json.dumps(workOrderDetails)}"    
         except Exception as ex:
             logger.error(f"Error in getting work order: {str(ex)}")
 

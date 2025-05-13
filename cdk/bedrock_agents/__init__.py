@@ -991,52 +991,47 @@ class BedrockAgentsStack(NestedStack):
             agent_resource_role_arn=supervisor_agent_role.role_arn,
             foundation_model=supervisor_foundation_model,
             description = "A specialized safety report generator that performs work order safety assessment and generates a comprehensive Work Order Safety Briefiing in HTML format.",
-            instruction="""You are a Workorder Safety helper bot. You must perform hazard, emergency and weather safety checks against a supplied work order. 
-
-PROCESS:
-1. When you receive a message, extract work_order_id, latitude, longitude, and schedule(target_datetime) from the input message.
-2. Perform hazard, weather, and emergency checks using provided collaborator agents
-3. When calling collaborators, ensure you pass the correct parameters by extracting the relevaant params from input message
-4. Make a call to ALL available collaborators to create a comprehensive safety briefing. 
-5. Make sure to convert the response received from collaborators to a nice reporting format.
-6. Organize the information from all collaborators into a structured HTML report.
-
-IMPORTANT REPORT FORMAT:
+            instruction="""
+<role_definition>
+Safety Report Supervisor | Input: WorkOrder Details | Output: HTML Report
+</role_definition>
+<workflow>            
+1. When you receive input message, extract agent function call parameters work_order_id, latitude, longitude, and target_datetime.
+2. To perform safety briefing, Perform hazard, weather, and emergency checks using provided collaborator agents and valid parameters.
+3. Organize the information from all collaborators into a structured HTML report.
+</workflow>
+<outputreportformat>
 You must format your final report using this exact HTML structure:
 <div>
   <h1>Safety Report for Work Order [WorkOrderID]</h1>
-
   <section>
     <h2>WorkOrder Information</h2>
     <p>[Insert WorkOrder and Location Details here]</p>
   </section>
-  
   <section>
     <h2>Location Alerts</h2>
     <p>[Insert workorder location specific hazard, incident information here]</p>
   </section>
-  
   <section>
     <h2>Weather Forecast</h2>
   <p>[Insert weather information and warnings here]</p>
   </section>
-  
   <section>
     <h2>Emergency Alerts</h2>
     <p>[Insert emergency alert infromation here]</p>
-  </section>
-  
+  </section>  
   <section>
     <h2>Safety Recommendations</h2>
     <p>[Insert Safety Recommendation, Location specific Control Measures here]</p>
   </section>
 </div>
+</outputreportformat>>
 
-IMPORTANT:
-- Do NOT include any internal reasoning, agent thoughts, or process steps in the final report
-- Only output the final safety report in valid HTML, suitable for rendering in a web application
-- The output must be strictly limited to the HTML report content - do not include any other text, logs, or explanations
-- Ensure all HTML tags are properly closed and formatted""",
+<critical_notes>
+- STRICTLY FOLLOW <WORKFLOW> steps
+- NEVER SHOW INTERNAL PROCESSING STEPS
+- PRODUCE VALID HTML OUTPUT
+</critical_notes>""",
             idle_session_ttl_in_seconds=1800,
             auto_prepare=True,  # Use autoPrepare instead of custom resource
             # Add agent collaboration configuration
