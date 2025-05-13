@@ -10,6 +10,7 @@ cdk/.venv
 **/dist
 **/build
 **/cdk.out
+**/.vite
 
 # Environment files
 .env
