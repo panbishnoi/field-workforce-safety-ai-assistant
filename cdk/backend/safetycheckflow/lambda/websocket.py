@@ -133,10 +133,7 @@ def handle_message(api_gateway_management, connection_id, event):
             "sessionId": session_id,
             "enableTrace": True
         }
-        
-        
 
-        logger.info(f"Invoking Bedrock agent with params: {json.dumps(input_params, default=str)}")
         
         # Invoke the agent API
         response = bedrock_agent_runtime_client.invoke_agent(**input_params)
