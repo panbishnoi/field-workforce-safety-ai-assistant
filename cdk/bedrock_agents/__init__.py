@@ -993,7 +993,7 @@ class BedrockAgentsStack(NestedStack):
             description = "A specialized safety report generator that performs work order safety assessment and generates a comprehensive Work Order Safety Briefiing in HTML format.",
             instruction="""
 <role_definition>
-Safety Report Supervisor | Input: WorkOrder Details | Output: HTML Report
+Safety Report Supervisor | Input: WorkOrder Details JSON | Output: HTML Report
 </role_definition>
 <workflow>            
 1. When you receive input message, extract agent function call parameters work_order_id, latitude, longitude, and target_datetime.
@@ -1003,11 +1003,7 @@ Safety Report Supervisor | Input: WorkOrder Details | Output: HTML Report
 <outputreportformat>
 You must format your final report using this exact HTML structure:
 <div>
-  <h1>Safety Report for Work Order [WorkOrderID]</h1>
-  <section>
-    <h2>WorkOrder Information</h2>
-    <p>[Insert WorkOrder and Location Details here]</p>
-  </section>
+  <h1>Safety Report for Work Order [work_order_id]</h1>
   <section>
     <h2>Location Alerts</h2>
     <p>[Insert workorder location specific hazard, incident information here]</p>

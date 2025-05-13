@@ -115,12 +115,9 @@ def handle_message(api_gateway_management, connection_id, event):
         payload = json.dumps(event_body)
 
         try:
-            # Extract query object
-            query_object = event_body['query']
             workOrderDetails = event_body['workOrderDetails']
-
-            # Create prompt string by concatenating query and workorder details
-            payload = f"{query_object} {json.dumps(workOrderDetails)}"    
+            # Create prompt string for workorder details
+            payload = f"{json.dumps(workOrderDetails)}"    
         except Exception as ex:
             logger.error(f"Error in getting work order: {str(ex)}")
 
