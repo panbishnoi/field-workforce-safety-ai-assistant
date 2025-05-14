@@ -71,3 +71,17 @@
   margin-top: 15px;
   gap: 10px;
 }
+/* Timestamp styling */
+.timestamp-container {
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #545b64;
+}
+
+.timestamp-label {
+  font-weight: 600;
+}
+
+.timestamp-value {
+  margin-left: 5px;
+}

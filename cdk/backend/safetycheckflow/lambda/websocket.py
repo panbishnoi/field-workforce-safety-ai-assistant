@@ -19,7 +19,7 @@ logger = Logger()
 def log(message):
     logger.info(message)
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(os.environ['WS_CONNECTION_TABLE_NAME'])
+ws_connection_table = dynamodb.Table(os.environ['WS_CONNECTION_TABLE_NAME'])
 
 # Environment variables
 REGION = os.environ.get("REGION", "us-east-1")
@@ -27,6 +27,40 @@ USER_POOL_ID = os.environ.get("USER_POOL_ID", "")
 CLIENT_ID = os.environ.get("CLIENT_ID", "")
 AGENT_ALIAS_ID = os.getenv("AGENT_ALIAS_ID")
 AGENT_ID = os.getenv("AGENT_ID")
+WORK_ORDERS_TABLE_NAME = os.environ.get("WORK_ORDERS_TABLE_NAME")
+work_orders_table = dynamodb.Table(WORK_ORDERS_TABLE_NAME) if WORK_ORDERS_TABLE_NAME else None
+
+# Function to extract HTML content from a response
+def extract_html_content(text):
+    """
+    Extract HTML content from a text string if it exists.
+    Returns the HTML content if found, otherwise returns the original text.
+    """
+    try:
+        # Look for HTML content between <html> tags
+        html_pattern = re.compile(r'<html>.*?</html>', re.DOTALL)
+        html_match = html_pattern.search(text)
+        
+        if html_match:
+            return html_match.group(0)
+        
+        # If no <html> tags, look for content between <body> tags
+        body_pattern = re.compile(r'<body>.*?</body>', re.DOTALL)
+        body_match = body_pattern.search(text)
+        
+        if body_match:
+            return body_match.group(0)
+        
+        # If no <body> tags, look for any HTML-like content with multiple tags
+        if '<div' in text and '</div>' in text:
+            # This is a simple heuristic - if there are div tags, it's likely HTML content
+            return text
+            
+        # Return original text if no HTML patterns found
+        return text
+    except Exception as e:
+        logger.error(f"Error extracting HTML content: {str(e)}")
+        return text  # Return original text on error
 
 bedrock_agent_runtime_client = boto3.client(
     'bedrock-agent-runtime',
@@ -78,7 +112,7 @@ def verify_token(token: str) -> dict:
 def handle_connect(connection_id):
     try:
         logger.info(f"Adding new connection entry to DynamoDB for {connection_id}")
-        table.put_item(
+        ws_connection_table.put_item(
             Item={
                 'connectionId': connection_id,
                 'ttl': int(time.time()) + 10 * 60,  # 10 minute TTL (comment says 24 hour but code was 10 min)
@@ -94,7 +128,7 @@ def handle_connect(connection_id):
 def handle_disconnect(connection_id):
     try:
         logger.info(f"Removing connection {connection_id} from DynamoDB")
-        table.delete_item(Key={'connectionId': connection_id})
+        ws_connection_table.delete_item(Key={'connectionId': connection_id})
         return {'statusCode': 200, 'body': 'Disconnected'}
     except Exception as e:
         logger.error(f"Disconnect handling error: {str(e)}")
@@ -156,15 +190,52 @@ def handle_message(api_gateway_management, connection_id, event):
                     'type': 'trace',
                     'content': trace
                 })
-        
+
+        # Get current timestamp in ISO format
+        current_time = datetime.now().isoformat()
+        # Store safety check response in WorkOrders table if available
+        try:
+            if work_orders_table and 'workOrderDetails' in event_body:
+                work_order_id = event_body['workOrderDetails'].get('work_order_id')
+                if work_order_id:
+                    
+                    
+                    # Extract HTML content if it exists
+                    processed_response = extract_html_content(completion)
+                    
+                    logger.info(f"Updating WorkOrders table for work_order_id: {work_order_id}")
+                    # Update the WorkOrders table with the safety check response and timestamp
+                    work_orders_table.update_item(
+                        Key={'work_order_id': work_order_id},
+                        UpdateExpression="set safetyCheckResponse = :r, safetyCheckPerformedAt = :p",
+                        ExpressionAttributeValues={
+                            ':r': processed_response,
+                            ':p': current_time
+                        }
+                    )
+                    logger.info(f"Successfully updated WorkOrders table for work_order_id: {work_order_id} at {current_time}")
+                else:
+                    logger.warning("No work_order_id found in workOrderDetails")
+            elif not work_orders_table:
+                logger.warning("WorkOrders table not configured, skipping update")
+            else:
+                logger.warning("No workOrderDetails in event body, skipping update")
+        except Exception as table_error:
+            logger.error(f"Error updating WorkOrders table: {str(table_error)}")
+            logger.error(traceback.format_exc())
+            # Continue execution even if table update fails
+
         # Send final completion
         request_id = f"ws-{connection_id}-{int(time.time())}"
         send_to_client(api_gateway_management, connection_id, {
             'type': 'final',
             'requestId': request_id,
             'status': 'COMPLETED',
-            'safetycheckresponse': completion
+            'safetyCheckResponse': completion,
+            'safetyCheckPerformedAt':current_time
         })
+        
+
         
         return {'statusCode': 200, 'body': 'Message sent'}
                 
@@ -175,7 +246,7 @@ def handle_message(api_gateway_management, connection_id, event):
             'type': 'error',
             'requestId': request_id,
             'status': 'COMPLETED',
-            'safetycheckresponse': "Error in performing safety check::"+str(e)
+            'safetyCheckResponse': "Error in performing safety check::"+str(e)
         })
         return {'statusCode': 500, 'body': f'Failed to process message: {str(e)}'}
 
@@ -199,7 +270,7 @@ def send_to_client(api_gateway_management, connection_id, message):
         # Connection is no longer valid
         logger.warning(f"Connection {connection_id} is invalid (GoneException).")
         try:
-            table.delete_item(Key={'connectionId': connection_id})
+            ws_connection_table.delete_item(Key={'connectionId': connection_id})
         except Exception as e:
             logger.error(f"Error deleting stale connection: {str(e)}")
     except Exception as e:

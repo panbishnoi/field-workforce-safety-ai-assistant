@@ -31,6 +31,7 @@ class WebSocketApiStack(Construct):
         region: str,
         user_pool= str,
         client_id= str,
+        work_order_table_name: str = None,
     ) -> None:
         super().__init__(scope, construct_id)
 
@@ -74,6 +75,7 @@ class WebSocketApiStack(Construct):
                 "REGION": region,
                 "AGENT_ID": agent_id,
                 "AGENT_ALIAS_ID": agent_alias_id,
+                "WORK_ORDERS_TABLE_NAME": work_order_table_name,  # Add WorkOrders table name
             },
         )
         web_socket_fn.node.add_dependency(safety_check_log_group)
@@ -101,7 +103,10 @@ class WebSocketApiStack(Construct):
                     "dynamodb:UpdateItem",
                     "dynamodb:DeleteItem"
                 ],
-                resources=[web_socket_table.table_arn],
+                resources=[
+                    web_socket_table.table_arn,
+                    f"arn:aws:dynamodb:{region}:{Stack.of(self).account}:table/{work_order_table_name}" if work_order_table_name else "*"
+                ],
             ),
             iam.PolicyStatement(
                 sid="CloudWatchLogsAccess",

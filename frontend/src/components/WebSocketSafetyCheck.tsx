@@ -6,7 +6,7 @@ import './WebSocketSafetyCheck.css';
 
 interface WebSocketSafetyCheckProps {
   workOrder: any;
-  onSafetyCheckComplete: (response: string) => void;
+  onSafetyCheckComplete: (response: string, timestamp?: string) => void;
   onSafetyCheckError: (error: string) => void;
   showResults?: boolean; // Optional prop to control whether to show results in this component
 }
@@ -51,7 +51,7 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
           // Reset states on error
           setIsProcessing(false);
           setIsConnecting(false);
-          onSafetyCheckError(webSocketMessage.message || 'Unknown error');
+          onSafetyCheckError(webSocketMessage.safetyCheckResponse || 'Unknown error');
           break;
       }
     };
@@ -112,8 +112,10 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
     }
     
     // Extract the final response - check both direct and nested formats
-    let finalResponse = message.safetycheckresponse || 
-                       (message.message && message.message.safetycheckresponse) || '';
+    let finalResponse = message.safetyCheckResponse || '';
+    
+    // Extract the safetyCheckPerformedAt timestamp if available
+    const timestamp = message.safetyCheckPerformedAt || null;
     
     if (finalResponse) {
       // Clean up the final response
@@ -122,8 +124,12 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       // Set the current chunk to show the final response (if we're showing results in this component)
       setCurrentChunk(finalResponse);
       
-      // Call the completion callback with the cleaned response
-      onSafetyCheckComplete(finalResponse);
+      // Call the completion callback with the cleaned response and timestamp
+      if (timestamp) {
+        onSafetyCheckComplete(finalResponse, timestamp);
+      } else {
+        onSafetyCheckComplete(finalResponse);
+      }
     } else {
       onSafetyCheckError('No response received from safety check');
     }
@@ -131,29 +137,46 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
 
   // Function to clean up the final response
   const cleanupFinalResponse = (response: string): string => {
-    // Remove any leading content before the first HTML tag
-    const htmlStartIndex = response.indexOf('<html>');
-    if (htmlStartIndex !== -1) {
-      response = response.substring(htmlStartIndex);
-    } else {
-      // If no <html> tag, look for any HTML tag
-      const firstTagMatch = response.match(/<[a-z][^>]*>/i);
-      if (firstTagMatch && firstTagMatch.index !== undefined) {
-        response = response.substring(firstTagMatch.index);
+    try {
+      // Check if there's any HTML content at all
+      if (!response.includes('<') || !response.includes('>')) {
+        return response; // No HTML tags at all, return as is
       }
+      
+      // Remove any leading content before the first HTML tag
+      const htmlStartIndex = response.indexOf('<html>');
+      if (htmlStartIndex !== -1) {
+        response = response.substring(htmlStartIndex);
+      } else {
+        // If no <html> tag, look for any HTML tag
+        const firstTagMatch = response.match(/<[a-z][^>]*>/i);
+        if (firstTagMatch && firstTagMatch.index !== undefined) {
+          response = response.substring(firstTagMatch.index);
+        }
+      }
+      
+      // Remove any empty lines
+      response = response.replace(/^\s*[\r\n]/gm, '');
+      
+      // Remove any model reasoning or non-HTML content at the beginning
+      // This regex looks for content before the first HTML tag
+      response = response.replace(/^[^<]*/g, '');
+      
+      // Remove any <safety_report> tags or similar wrapper tags
+      response = response.replace(/<\/?safety_report>/g, '');
+      
+      // If after all this processing we don't have any HTML tags left, return original
+      const hasHtmlStructure = /<[a-z][^>]*>.*<\/[a-z][^>]*>/is.test(response);
+      if (!hasHtmlStructure) {
+        console.log("No valid HTML structure found after cleanup, returning original response");
+        return response;
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Error cleaning up response:', error);
+      return response; // Return original response on error
     }
-    
-    // Remove any empty lines
-    response = response.replace(/^\s*[\r\n]/gm, '');
-    
-    // Remove any model reasoning or non-HTML content at the beginning
-    // This regex looks for content before the first HTML tag
-    response = response.replace(/^[^<]*/g, '');
-    
-    // Remove any <safety_report> tags or similar wrapper tags
-    response = response.replace(/<\/?safety_report>/g, '');
-    
-    return response;
   };
 
   const performSafetyCheck = async () => {
@@ -256,6 +279,7 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
         <div className="trace-container">
           {isProcessing && <h3 className="section-heading-processing">Processing Safety Check</h3>}
           {finalResponseReceived && showResults && <h3 className="section-heading-complete">Safety Check Complete</h3>}
+
           
           {/* Single continuous trace block */}
           <div className="agent-reasoning">

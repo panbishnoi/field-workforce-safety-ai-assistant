@@ -23,8 +23,8 @@ You can deploy this solution using either AWS CDK directly or via CloudFormation
 - An AWS account
 - Configure AWS credentials in your environment
 - Download and install [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-- Access to Amazon Bedrock foundation models (Claude 3 Sonnet recommended)
-- Enable required models in the Amazon Bedrock console (https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess). You may need to request access if not already granted.
+- Access to Amazon Bedrock foundation models (Claude 3.X recommended)
+- Enable required models in the Amazon Bedrock console. You may need to request access if not already granted.
 - OpenWeather API key is required for weather forecast integration. Please visit OpenWeather registration page for obtaining API Key[OpenWeatherSignUp](https://home.openweathermap.org/users/sign_up)
 
 ### Deployment Options
@@ -47,6 +47,7 @@ The CloudFormation template will:
 
 #### Option 2: Deploy using CDK directly
 
+
 1. Create and activate a Python virtual environment:
 
 ```bash
@@ -61,18 +62,19 @@ You should see (.venv) at the beginning of your command prompt.
 ```bash
 pip install -r requirements.txt
 ```
+3. Ensure Docker is running. CDK uses Docker for bundling assets and packaging Lambda functions with dependencies. If you don't have Docker Desktop, you can use alternatives:
 
-3. Log in to the AWS ECR Public registry. This is needed to download docker images for builds.
+4. Log in to the AWS ECR Public registry. This is needed to download docker images for builds.
 ```bash
 aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
 ```
 
-4. If this is the first time using CDK in this account and region, bootstrap CDK. This is a one-time setup that provisions resources CDK needs to deploy your stacks.
+5. If this is the first time using CDK in this account and region, bootstrap CDK. This is a one-time setup that provisions resources CDK needs to deploy your stacks.
 ```bash
 cdk bootstrap
 ```
 
-5. Deploy the FieldWorkForceSafetyMainStack stack with required parameters:
+6. Deploy the FieldWorkForceSafetyMainStack stack with required parameters:
 ```bash    
 cdk deploy FieldWorkForceSafetyMainStack --require-approval never --context openweather_api_key="YOUR_API_KEY" --context collaborator_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0" --context supervisor_foundation_model="anthropic.claude-3-sonnet-20240229-v1:0"
 ```

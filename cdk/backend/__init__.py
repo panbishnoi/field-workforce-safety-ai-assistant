@@ -81,6 +81,7 @@ class BackendStack(NestedStack):
             region=self.region,
             user_pool=self.cognito.user_pool.user_pool_id,
             client_id=self.cognito.user_pool_client.user_pool_client_id,
+            work_order_table_name=work_order_table_name,
         )
 
         # Store outputs as properties for easy access by the frontend stack
