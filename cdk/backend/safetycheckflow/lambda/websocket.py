@@ -77,7 +77,8 @@ bedrock_agent_runtime_client = boto3.client(
 def verify_token(token: str) -> dict:
     try:
         url = f"https://cognito-idp.{REGION}.amazonaws.com/{USER_POOL_ID}/.well-known/jwks.json"
-        response = requests.get(url)
+        # Add timeout parameter to prevent hanging connections
+        response = requests.get(url, timeout=15)
         response.raise_for_status()  # Raise exception for non-200 responses
         
         keys = response.json().get("keys", [])

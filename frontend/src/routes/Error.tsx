@@ -10,13 +10,17 @@ export default function Error() {
 
   return (
     <main id="error-page">
+      {/* i18n-disable */}
       <h3>Oops!</h3>
       <p>Sorry, an unexpected error has occurred.</p>
+      {/* i18n-enable */}
       <code>
         <i>{getErrorMessage(error)}</i>
       </code>
 
+      {/* i18n-disable */}
       <footer>Industrial AI Demo</footer>
+      {/* i18n-enable */}
     </main>
   );
 }

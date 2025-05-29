@@ -77,7 +77,11 @@ const WorkOrderList = () => {
 
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>
+      {/* i18n-disable */}
+      Loading...
+      {/* i18n-enable */}
+    </div>;
   }
 
   if (error) {
@@ -89,7 +93,9 @@ const WorkOrderList = () => {
       <Table
         header={
           <Header>
+            {/* i18n-disable */}
             Work Order Queue
+            {/* i18n-enable */}
           </Header>
         }
         columnDefinitions={[

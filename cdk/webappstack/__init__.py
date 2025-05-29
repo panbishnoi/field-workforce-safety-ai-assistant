@@ -107,15 +107,7 @@ class FrontendStack(NestedStack):
 
         function_name = f"{id.lower()}-config-update"
         
-        # Create explicit log group for config lambda function
-        config_lambda_log_group = logs.LogGroup(
-            self,
-            "ConfigLambdaLogGroup",
-            log_group_name=f"/aws/lambda/{function_name}",
-            retention=logs.RetentionDays.ONE_WEEK,
-            removal_policy=RemovalPolicy.DESTROY
-        )
-        
+
         # Create a Lambda function to update config.js with actual backend values
         config_lambda = lambda_.Function(
             self, "ConfigUpdateLambda",
@@ -130,7 +122,6 @@ class FrontendStack(NestedStack):
             }
         )
 
-        config_lambda.node.add_dependency(config_lambda_log_group)
         # Grant the Lambda function permissions to read/write to the S3 bucket
         webapp_bucket.grant_read_write(config_lambda)
 

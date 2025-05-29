@@ -28,7 +28,9 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ centerPoint, description, emerg
       {/* Work Order Location */}
       <Marker position={[centerPoint[1], centerPoint[0]]}>
         <Popup>
+          {/* i18n-disable */}
           <strong>Work Order Location</strong>
+          {/* i18n-enable */}
           <br />
           {description}
         </Popup>
@@ -54,14 +56,38 @@ const UnifiedMap: React.FC<UnifiedMapProps> = ({ centerPoint, description, emerg
             >
               <Popup>
                 <h3>{emergency.properties.category1}</h3>
-                <p><strong>Status:</strong> {emergency.properties.status}</p>
-                <p><strong>Location:</strong> {emergency.properties.location}</p>
-                <p><strong>Source:</strong> {emergency.properties.sourceOrg}</p>
-                <p><strong>Type:</strong> {emergency.properties.feedType}</p>
+                <p>
+                  {/* i18n-disable */}
+                  <strong>Status:</strong> {emergency.properties.status}
+                  {/* i18n-enable */}
+                </p>
+                <p>
+                  {/* i18n-disable */}
+                  <strong>Location:</strong> {emergency.properties.location}
+                  {/* i18n-enable */}
+                </p>
+                <p>
+                  {/* i18n-disable */}
+                  <strong>Source:</strong> {emergency.properties.sourceOrg}
+                  {/* i18n-enable */}
+                </p>
+                <p>
+                  {/* i18n-disable */}
+                  <strong>Type:</strong> {emergency.properties.feedType}
+                  {/* i18n-enable */}
+                </p>
                 {emergency.properties.size && (
-                  <p><strong>Size:</strong> {emergency.properties.size}</p>
+                  <p>
+                    {/* i18n-disable */}
+                    <strong>Size:</strong> {emergency.properties.size}
+                    {/* i18n-enable */}
+                  </p>
                 )}
-                <p><strong>Updated:</strong> {new Date(emergency.properties.updated).toLocaleString()}</p>
+                <p>
+                  {/* i18n-disable */}
+                  <strong>Updated:</strong> {new Date(emergency.properties.updated).toLocaleString()}
+                  {/* i18n-enable */}
+                </p>
               </Popup>
             </Circle>
           );

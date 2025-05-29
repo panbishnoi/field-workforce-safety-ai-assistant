@@ -277,13 +277,25 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
       
       {(isProcessing || (finalResponseReceived && showResults)) && (
         <div className="trace-container">
-          {isProcessing && <h3 className="section-heading-processing">Processing Safety Check</h3>}
-          {finalResponseReceived && showResults && <h3 className="section-heading-complete">Safety Check Complete</h3>}
+          {isProcessing && <h3 className="section-heading-processing">
+            {/* i18n-disable */}
+            Processing Safety Check
+            {/* i18n-enable */}
+          </h3>}
+          {finalResponseReceived && showResults && <h3 className="section-heading-complete">
+            {/* i18n-disable */}
+            Safety Check Complete
+            {/* i18n-enable */}
+          </h3>}
 
           
           {/* Single continuous trace block */}
           <div className="agent-reasoning">
-            <h4 className="subsection-heading">Agent Reasoning</h4>
+            <h4 className="subsection-heading">
+              {/* i18n-disable */}
+              Agent Reasoning
+              {/* i18n-enable */}
+            </h4>
             {traceContent ? (
               <div className="trace-content">
                 {traceContent.split('\n\n').map((paragraph, index) => (
@@ -291,14 +303,22 @@ const WebSocketSafetyCheck: React.FC<WebSocketSafetyCheckProps> = ({
                 ))}
               </div>
             ) : (
-              <p>No reasoning information available yet.</p>
+              <p>
+                {/* i18n-disable */}
+                No reasoning information available yet.
+                {/* i18n-enable */}
+              </p>
             )}
           </div>
           
           {/* Only show the response here if showResults is true */}
           {currentChunk && showResults && (
             <div className="current-response">
-              <h4 className="subsection-heading">Safety Briefing Response</h4>
+              <h4 className="subsection-heading">
+                {/* i18n-disable */}
+                Safety Briefing Response
+                {/* i18n-enable */}
+              </h4>
               <div 
                 className="response-text" 
                 dangerouslySetInnerHTML={{ __html: currentChunk }}

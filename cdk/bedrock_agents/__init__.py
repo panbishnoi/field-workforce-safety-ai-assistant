@@ -332,14 +332,6 @@ class BedrockAgentsStack(NestedStack):
         # Define function name first - use the exact name that appears in AWS
         function_name = f"{construct_id.lower()}-data-import"
         
-        # Create explicit log group for data import function with the exact name
-        data_import_log_group = logs.LogGroup(
-            self,
-            "DataImportLogGroup",
-            log_group_name=f"/aws/lambda/{function_name}",
-            retention=logs.RetentionDays.ONE_WEEK,
-            removal_policy=RemovalPolicy.DESTROY
-        )
         
         # Create Data Import Lambda Function
         data_import_function = lambda_.Function(
@@ -363,7 +355,6 @@ class BedrockAgentsStack(NestedStack):
                 "CONTROL_MEASURES_TABLE_NAME": control_measures_table.table_name
             }
         )
-        data_import_function.node.add_dependency(data_import_log_group)
         
         # Add NAG suppression for Lambda runtime
         NagSuppressions.add_resource_suppressions(
